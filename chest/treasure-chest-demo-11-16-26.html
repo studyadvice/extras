@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>treasure-chest 獎勵開啟動畫 v1.3（11-16-26）</title>
+<style>
+  body{margin:0;background:#0C0D0C;color:#C6C7BD;font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",system-ui,sans-serif;font-size:1rem;min-width:1280px;}
+  .wrap{max-width:1500px;margin:0 auto;padding:24px 32px 80px 32px;}
+  h1{font-size:1.7rem;font-weight:800;color:#DBEDD8;margin:0 0 6px 0;}
+  h1 code{color:#51DBCF;font-size:1.2rem;}
+  .sub{color:#86877F;font-size:0.95rem;margin:0 0 28px 0;line-height:1.7;}
+  section{margin:0 0 48px 0;}
+  .sec-title{display:flex;align-items:baseline;gap:12px;margin:0 0 14px 0;}
+  .sec-title h2{font-size:1.25rem;font-weight:700;color:#B484E8;margin:0;}
+  .sec-title p{margin:0 0 0 auto;font-size:0.85rem;color:#86877F;}
+  .two{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;}
+  pre{background:#161716;border:1px solid #3B2A20;border-radius:8px;padding:14px 18px;color:#C6C7BD;font-size:0.8rem;margin:0;white-space:pre-wrap;font-family:Consolas,"Cascadia Mono",ui-monospace,monospace;}
+  code{color:#51DBCF;font-family:Consolas,"Cascadia Mono",ui-monospace,monospace;}
+  .btns{display:flex;gap:8px;margin:0 0 12px 0;}
+  .btns button{background:#0C0D0C;border:1px solid #51DBCF;color:#51DBCF;border-radius:6px;padding:4px 14px;font-size:0.9rem;cursor:pointer;font-family:inherit;}
+  .btns button:hover{background:#51DBCF;color:#0C0D0C;}
+  .log{font-size:0.88rem;color:#86877F;margin:10px 0 0 0;min-height:1.4em;}
+  .card{display:flex;align-items:center;gap:24px;background:#141514;border:1px solid #3B2A20;border-radius:16px;padding:20px 28px;}
+  .card h3{margin:0 0 6px 0;font-size:1.3rem;color:#DBEDD8;}
+  .card p{margin:0;color:#86877F;line-height:1.7;}
+  .card treasure-chest{flex:0 0 auto;}
+  .spacer{height:40px;color:#86877F;font-size:0.9rem;}
+  h2.part{font-size:1.45rem;font-weight:800;color:#E3D322;margin:56px 0 24px 0;padding:0 0 10px 0;border-bottom:2px solid #3B2A20;}
+  .chain{display:flex;flex-direction:column;gap:16px;align-items:flex-start;}
+  .msg{border:2px solid #71CD76;color:#71CD76;border-radius:12px;padding:12px 20px;font-size:1.1rem;font-weight:700;}
+  .diff{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .diff h4{font-size:0.95rem;margin:0 0 8px 0;}
+  .diff h4.old{color:#EF6661;}.diff h4.new{color:#71CD76;}
+  .row4{display:grid;grid-template-columns:repeat(4,auto);gap:18px;justify-content:start;}
+  .row4 figure{margin:0;text-align:center;}
+  .row4 figcaption{margin:6px 0 0 0;color:#E3D322;font-family:Consolas,ui-monospace,monospace;font-size:0.9rem;}
+  table.attr{width:100%;border-collapse:collapse;font-size:0.88rem;margin:0 0 28px 0;}
+  table.attr th{text-align:left;color:#0C0D0C;background:#C6C7BD;padding:6px 12px;}
+  table.attr td{padding:7px 12px;border-bottom:1px solid #3B2A20;vertical-align:top;color:#DBEDD8;line-height:1.6;}
+  table.attr td:first-child{color:#51DBCF;font-family:Consolas,ui-monospace,monospace;white-space:nowrap;}
+  table.attr td:nth-child(2){color:#E3D322;white-space:nowrap;}
+  .row4b{display:grid;grid-template-columns:repeat(4,auto);gap:18px;justify-content:start;}
+  .row4b figure{margin:0;text-align:center;}
+  .row4b figcaption{margin:6px 0 0 0;color:#E3D322;font-family:Consolas,ui-monospace,monospace;font-size:0.9rem;}
+  .quiz{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;background:#141514;border:1px solid #3B2A20;border-radius:16px;padding:20px 28px;}
+  .lock{border:2px dashed #86877F;color:#86877F;border-radius:12px;padding:14px 20px;font-size:1rem;margin:0 0 12px 0;}
+  .unlock{border:2px solid #71CD76;color:#DBEDD8;border-radius:12px;padding:14px 20px;margin:0 0 12px 0;}
+  .unlock b{color:#71CD76;}
+  h3.cat{font-size:1.05rem;margin:24px 0 8px 0;padding:0 0 0 12px;border-left:4px solid #51DBCF;color:#51DBCF;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><code>&lt;treasure-chest&gt;</code> 獎勵開啟動畫 v1.3</h1>
+  <p class="sub">寶箱先搖晃，箱蓋往後翻開，箱內透出金光，背後射出旋轉的光芒，星光與金幣噴出，獎品從箱口升起，之後光芒持續緩慢旋轉。寶箱是 SVG，光芒、星光、金幣畫在 canvas 上。單一 treasure-chest.js，CSS 內建，不用 Shadow DOM，不需要任何外部資源，離線也能用。光芒以實色漸層過渡到 <code>bg</code> 背景色、以亮度相加的方式疊亮，不使用透明度。</p>
+
+  <section>
+    <div class="sec-title"><h2>範例 1：點擊開啟，再點一次重來</h2><p>chest-prize 裡寫獎品內容，可以是任何 HTML。replay 讓已開啟的寶箱再點一次會關上。</p></div>
+    <div class="two">
+      <treasure-chest size="240" replay><chest-prize>Band 7.0 達成！</chest-prize></treasure-chest>
+      <pre>&lt;treasure-chest size="240" replay&gt;
+  &lt;chest-prize&gt;Band 7.0 達成！&lt;/chest-prize&gt;
+&lt;/treasure-chest&gt;
+
+&lt;script src="treasure-chest.js"&gt;&lt;/script&gt;
+
+開箱時間軸
+  0 到 0.75 秒   搖晃（越搖越大）
+  0.75 秒        箱蓋翻開，箱身先壓扁再彈起
+  0.8 秒         光芒展開，星光與金幣噴出
+  1.05 秒        獎品從箱口升起
+  之後           光芒持續旋轉，箱口不斷冒出細小星光（ambient）</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 2：捲動到畫面中自動開啟，自訂顏色</h2><p>trigger="auto"：寶箱有六成出現在畫面上時，等 delay 毫秒後自動打開。</p></div>
+    <div class="two">
+      <treasure-chest trigger="auto" delay="500" size="220" chest-color="#33457A" trim-color="#C6C7BD" gold="key" light="#E9FFFC" rays="20" coins="0" prize-color="key">
+        <chest-prize>解鎖：語塊個論</chest-prize>
+      </treasure-chest>
+      <pre>&lt;treasure-chest trigger="auto" delay="500" size="220"
+                chest-color="#33457A" trim-color="#C6C7BD"
+                gold="key" light="#E9FFFC" rays="20" coins="0" prize-color="key"&gt;
+  &lt;chest-prize&gt;解鎖：語塊個論&lt;/chest-prize&gt;
+&lt;/treasure-chest&gt;
+
+chest-color：箱身木頭的主色，明暗自動計算
+trim-color：金屬邊框與金幣的顏色
+gold、light：光芒的主色與最亮的中心色
+coins="0"：不噴金幣</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 3：用程式控制與事件</h2><p>trigger="none"：只能用 open() 打開，適合在答題正確、播放到某一步時才開箱。</p></div>
+    <div class="two">
+      <div>
+        <div class="btns"><button type="button" id="b-open">open()</button><button type="button" id="b-reset">reset()</button></div>
+        <treasure-chest id="api" trigger="none" size="200" rays="10" sparkles="120" coins="16" ray-speed="25">
+          <chest-prize><span style="font-size:0.8em">全部答對</span><br>+50 XP</chest-prize>
+        </treasure-chest>
+        <div class="log" id="log">事件會顯示在這裡</div>
+      </div>
+      <pre>&lt;treasure-chest id="api" trigger="none" size="200"
+                rays="10" sparkles="120" coins="16" ray-speed="25"&gt;
+  &lt;chest-prize&gt;全部答對&lt;br&gt;+50 XP&lt;/chest-prize&gt;
+&lt;/treasure-chest&gt;
+
+const chest = document.getElementById('api');
+chest.open();      // 開箱
+chest.reset();     // 關回去，可以再開一次
+chest.opened;      // 是否已經完全打開
+
+chest.addEventListener('treasure-chest:open',   …);  // 開始開箱
+chest.addEventListener('treasure-chest:opened', …);  // 動畫完成
+chest.addEventListener('treasure-chest:reset',  …);</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 4：放進一般版面</h2><p>size 調小就能放進卡片；沒有寫 chest-prize 時不顯示獎品框。</p></div>
+    <div class="card">
+      <treasure-chest size="110" hint="" bg="#141514" sparkles="40" coins="6"></treasure-chest>
+      <div><h3>本課練習完成</h3><p>點一下左邊的寶箱領取獎勵。寶箱的背景色用 bg 設定成和卡片一樣（#141514），光芒的邊緣才會自然融入；hint="" 不顯示提示文字。</p></div>
+    </div>
+  </section>
+
+  <h2 class="part">v1.1（11-16-26）：支援 link-when</h2>
+
+  <section>
+    <div class="sec-title"><h2>範例 5：對話播完開寶箱，寶箱開完出現下一課</h2><p>按對話的「播放」。寶箱當 B 時 do="play" 會開箱；當 A 時 event="done" 等到開箱動畫完成。</p></div>
+    <div class="two">
+      <div class="chain" style="width:520px">
+        <ui-stream id="lw-s" controls height="200" avatar-size="34" bubble-width="86">
+          <stream-role name="student" label="Amy" color="violet" initials="A" side="left" data-style="outline"></stream-role>
+          <stream-role name="teacher" label="老師" color="key" initials="T" side="right" data-style="filled"></stream-role>
+          <stream-item from="student">I go to the river every weekend.</stream-item>
+          <stream-item from="teacher" typed>完全正確，every 後面接單數。</stream-item>
+        </ui-stream>
+        <treasure-chest id="lw-c" hidden trigger="none" size="200"><chest-prize>+30 XP</chest-prize></treasure-chest>
+        <div id="lw-msg" class="msg" hidden>獎勵已入帳，下一課：語塊個論</div>
+        <link-when source="#lw-s" target="#lw-c" delay="400" enter="pop"></link-when>
+        <link-when source="#lw-c" target="#lw-msg" do="show" delay="300" enter="slide-up"></link-when>
+      </div>
+      <pre>&lt;ui-stream id="lw-s" controls&gt;…&lt;/ui-stream&gt;
+&lt;treasure-chest id="lw-c" hidden trigger="none" size="200"&gt;
+  &lt;chest-prize&gt;+30 XP&lt;/chest-prize&gt;
+&lt;/treasure-chest&gt;
+&lt;div id="lw-msg" hidden&gt;獎勵已入帳，下一課：語塊個論&lt;/div&gt;
+
+&lt;!-- 對話播完 → 寶箱彈出並開箱（do 預設 play，寶箱的 play() 就是開箱） --&gt;
+&lt;link-when source="#lw-s" target="#lw-c" delay="400" enter="pop"&gt;&lt;/link-when&gt;
+
+&lt;!-- 寶箱開完（event="done" ＝ treasure-chest:opened）→ 顯示下一課 --&gt;
+&lt;link-when source="#lw-c" target="#lw-msg" do="show" delay="300" enter="slide-up"&gt;&lt;/link-when&gt;
+
+&lt;script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/lw/link-when.js"&gt;&lt;/script&gt;
+&lt;script src="treasure-chest.js"&gt;&lt;/script&gt;
+
+寶箱當 B（target）
+  do="play"（預設）：開箱
+  do="reset"：關回原狀
+  do="show"：只顯示；搭配 trigger="auto" 顯示後會自動開箱
+寶箱當 A（source）
+  event="done"：開箱動畫完成時觸發（treasure-chest:opened）
+  event="treasure-chest:open"：一開始開箱就觸發
+link-when.js 與 treasure-chest.js 誰先載入都可以，不需要修改 link-when.js</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>版本對照：v1.0 → v1.1</h2><p>開箱動畫與所有屬性都沒有改變。</p></div>
+    <div class="diff">
+      <div><h4 class="old">v1.0</h4><pre>/* link-when 的 do="play" 找不到方法，只能寫 do="open" */
+&lt;link-when … target="#chest" do="open"&gt;
+
+/* 寶箱當 A 時，event="done" 不認得寶箱，
+   要自己寫完整事件名稱 */
+&lt;link-when source="#chest" event="treasure-chest:opened" …&gt;</pre></div>
+      <div><h4 class="new">v1.1</h4><pre>/* 新增 play()，等同 open() */
+play() { this.open(); }
+
+/* 載入時把完成事件登記到 link-when 的對照表 */
+const reg = () =&gt; { const L = window.LinkWhen;
+  if (L &amp;&amp; L.doneEvents &amp;&amp; !L.doneEvents['treasure-chest'])
+    L.doneEvents['treasure-chest'] = 'treasure-chest:opened'; };
+reg(); customElements.whenDefined('link-when').then(reg);</pre></div>
+    </div>
+  </section>
+
+  <h2 class="part">v1.2（11-16-26）：shake 改為 0 到 1 的強度</h2>
+
+  <section>
+    <div class="sec-title"><h2>範例 6：四種搖晃強度並排比較</h2><p>按「全部開箱」同時播放；單獨點寶箱也可以，開完再點一次會關上。</p></div>
+    <div class="btns"><button type="button" id="b-all">全部開箱</button></div>
+    <div class="row4" id="shake-row">
+      <figure><treasure-chest size="150" shake="0" hint="" replay coins="4" sparkles="50"><chest-prize>0</chest-prize></treasure-chest><figcaption>shake="0"</figcaption></figure>
+      <figure><treasure-chest size="150" shake="0.25" hint="" replay coins="4" sparkles="50"><chest-prize>0.25</chest-prize></treasure-chest><figcaption>shake="0.25"</figcaption></figure>
+      <figure><treasure-chest size="150" hint="" replay coins="4" sparkles="50"><chest-prize>0.5</chest-prize></treasure-chest><figcaption>預設 0.5</figcaption></figure>
+      <figure><treasure-chest size="150" shake="1" hint="" replay coins="4" sparkles="50"><chest-prize>1</chest-prize></treasure-chest><figcaption>shake="1"</figcaption></figure>
+    </div>
+    <pre style="margin:16px 0 0 0">&lt;treasure-chest shake="0"&gt;     ← 不搖晃，直接掀蓋
+&lt;treasure-chest shake="0.25"&gt;  ← 輕輕晃一下
+&lt;treasure-chest&gt;               ← 預設 0.5，與 v1.1 相同
+&lt;treasure-chest shake="1"&gt;     ← 劇烈搖晃並往上跳
+
+強度 k 影響的項目
+  搖晃時間：0.35 + 0.8 × k 秒（0.5 為 0.75 秒）
+  最大角度：14 × k 度（0.5 為 7 度）
+  晃動次數：隨 k 增加，越強越急
+  箱蓋喀喀晃動：越強開得越大
+  往上跳：k 大於 0.4 才開始，1 時最明顯
+舊寫法照常可用：shake="true" 等同 0.5，shake="false" 等同 0</pre>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>版本對照：v1.1 → v1.2</h2><p>沒寫 shake 時，效果與 v1.1 相同。</p></div>
+    <div class="diff">
+      <div><h4 class="old">v1.1</h4><pre>/* 只有開或關 */
+shake: a('shake', 'true') !== 'false'
+
+const sh = o.shake ? 0.75 : 0.05;
+rot = Math.sin(p * Math.PI * 9) * (2 + p * 5) * (o.shake ? 1 : 0);
+lidK = 1 - 0.06 * Math.abs(Math.sin(p * Math.PI * 9)) * p;</pre></div>
+      <div><h4 class="new">v1.2</h4><pre>/* 0 到 1 的強度；true＝0.5、false＝0 */
+shake: this._shakeVal(a('shake', '0.5'))
+
+const sh = k &gt; 0 ? 0.35 + 0.8 * k : 0.05;
+const w = Math.sin(p * Math.PI * (7 + 4 * k)), env = 0.3 + 0.7 * p;
+rot = w * env * 14 * k;
+lidK = 1 - 0.12 * k * Math.abs(w) * p;
+hop = -Math.abs(w) * p * Math.max(0, k - 0.4) * 14;   /* 新增：往上跳 */</pre></div>
+    </div>
+  </section>
+
+  <h2 class="part">v1.3（11-16-26）：四種圖形、完結後顯示或刪除元素</h2>
+
+  <section>
+    <div class="sec-title"><h2>範例 7：type 切換四種圖形</h2><p>按「全部開啟」同時播放；單獨點也可以，開完再點一次會關上。每種圖形都有自己的開啟動作與噴出物。</p></div>
+    <div class="btns"><button type="button" id="b-types">全部開啟</button></div>
+    <div class="row4b" id="type-row">
+      <figure><treasure-chest type="chest" size="150" replay sparkles="50"><chest-prize>寶箱</chest-prize></treasure-chest><figcaption>type="chest"（預設）</figcaption></figure>
+      <figure><treasure-chest type="trophy" size="150" replay sparkles="50"><chest-prize>冠軍</chest-prize></treasure-chest><figcaption>type="trophy"</figcaption></figure>
+      <figure><treasure-chest type="gift" size="150" replay sparkles="50"><chest-prize>驚喜</chest-prize></treasure-chest><figcaption>type="gift"</figcaption></figure>
+      <figure><treasure-chest type="gacha" size="150" replay sparkles="50"><chest-prize>SSR</chest-prize></treasure-chest><figcaption>type="gacha"</figcaption></figure>
+    </div>
+    <pre style="margin:16px 0 0 0">&lt;treasure-chest type="chest"&gt;   ← 寶箱：搖晃 → 箱蓋往後翻開 → 金幣噴出（與 v1.2 完全相同）
+&lt;treasure-chest type="trophy"&gt;  ← 獎盃：杯子從底座往上一頂 → 杯口亮起、金幣噴出 → 落回底座，反光每 2.8 秒掃過一次
+&lt;treasure-chest type="gift"&gt;    ← 禮物盒：盒蓋連蝴蝶結彈飛 → 盒口亮起、彩紙噴出並左右飄落
+&lt;treasure-chest type="gacha"&gt;   ← 轉蛋機：旋鈕轉兩圈、機內扭蛋跳動 → 扭蛋從出口滾出、飛到正前方放大 → 裂開噴光
+
+各圖形的預設值（沒寫屬性時套用）
+  type     chest-color  trim-color   噴出物       hint
+  chest    #8A5530      #E8B931      10 枚金幣    點擊打開
+  trophy   #3B2A20      #E8B931      8 枚金幣     點擊領獎
+  gift     #EF6661      #E3D322      40 片彩紙    點擊拆開
+  gacha    #EF6661      #C6C7BD      不噴         點擊轉一次
+寫錯 type 會在主控台提醒，並改用 chest。</pre>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 8：用自己的色票換色</h2><p>顏色屬性都可以寫色票名稱（key、violet、vanilla…）或色碼，明暗自動計算。</p></div>
+    <div class="btns"><button type="button" id="b-colors">全部開啟</button></div>
+    <div class="row4b" id="color-row">
+      <figure><treasure-chest type="chest" size="150" replay hint="" chest-color="violet" trim-color="vanilla" gold="dreamy" light="#FBEFFF" sparkles="50"><chest-prize>violet</chest-prize></treasure-chest><figcaption>violet ＋ vanilla</figcaption></figure>
+      <figure><treasure-chest type="trophy" size="150" replay hint="" chest-color="indigo" trim-color="shell" gold="quiet" light="#F2F5FF" prize-color="shell" sparkles="50"><chest-prize>銀盃</chest-prize></treasure-chest><figcaption>indigo ＋ shell</figcaption></figure>
+      <figure><treasure-chest type="gift" size="150" replay hint="" chest-color="key" trim-color="pink" gold="pink" light="#FFF0FA" prize-color="pink" sparkles="50"><chest-prize>key</chest-prize></treasure-chest><figcaption>key ＋ pink</figcaption></figure>
+      <figure><treasure-chest type="gacha" size="150" replay hint="" chest-color="blue" trim-color="salmon" capsule-color="energetic" gold="energetic" light="#F6FFE0" prize-color="energetic" sparkles="50"><chest-prize>UR</chest-prize></treasure-chest><figcaption>blue ＋ energetic 扭蛋</figcaption></figure>
+    </div>
+    <pre style="margin:16px 0 0 0">&lt;treasure-chest type="trophy" chest-color="indigo" trim-color="shell" gold="quiet" light="#F2F5FF" prize-color="shell"&gt;
+&lt;treasure-chest type="gacha"  chest-color="blue"   trim-color="salmon" capsule-color="energetic" gold="energetic"&gt;
+
+chest-color    主體色：寶箱木頭、獎盃底座、禮物盒、轉蛋機機身
+trim-color     配件色：寶箱金屬、獎盃杯身、緞帶與蝴蝶結、轉蛋機金屬零件；寶箱和獎盃的金幣也用這個顏色
+capsule-color  轉蛋機掉出來的那顆扭蛋上半部（預設 pink）；機內的扭蛋用固定的色票彩色
+gold、light    光芒主色與最亮的中心色；禮物盒、轉蛋機的金幣用 gold</pre>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 9：動畫完結後顯示與刪除元素</h2><p>點禮物盒。完結時「尚未解鎖」被刪除，兩張解鎖卡出現；按 reset() 全部還原。</p></div>
+    <div class="quiz">
+      <div>
+        <div class="btns"><button type="button" id="b-rv-reset">reset()</button></div>
+        <treasure-chest id="rv" type="gift" size="170" bg="#141514" reveal-targets="rv-a,rv-b" remove-targets="rv-lock">
+          <chest-prize>測驗滿分</chest-prize>
+        </treasure-chest>
+        <div class="log" id="rv-log">事件會顯示在這裡</div>
+      </div>
+      <div>
+        <div id="rv-lock" class="lock">尚未解鎖：拆開禮物後才能看到下一步。</div>
+        <div id="rv-a" class="unlock" hidden><b>解鎖 1</b>　Part 2 口說題卡：Describe a gift you received.</div>
+        <div id="rv-b" class="unlock" style="display:none"><b>解鎖 2</b>　本課語塊表下載</div>
+        <pre>&lt;treasure-chest type="gift" reveal-targets="rv-a,rv-b" remove-targets="rv-lock"&gt;…&lt;/treasure-chest&gt;
+
+&lt;div id="rv-lock"&gt;尚未解鎖…&lt;/div&gt;
+&lt;div id="rv-a" hidden&gt;解鎖 1…&lt;/div&gt;
+&lt;div id="rv-b" style="display:none"&gt;解鎖 2…&lt;/div&gt;
+
+執行時機：獎品升起、光芒展開之後的「完結」那一刻，與 treasure-chest:opened 同時
+寫法：用逗號分隔；只寫 id 可以省略 #，也可以寫選擇器（例如 .tip、#box p）
+顯示：拿掉 hidden、清掉 display:none，並往上浮現；刪除：從頁面移除
+reset()：顯示過的再藏起來，刪除過的放回原來位置
+事件 detail：{ type, revealed: [元素…], removed: [元素…] }</pre>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>版本對照：v1.2 → v1.3</h2><p>沒寫 type 時就是 chest，外觀、時間軸與 v1.2 相同。</p></div>
+    <div class="diff">
+      <div><h4 class="old">v1.2</h4><pre>/* 只有寶箱，圖形與動作寫死在元件裡 */
+_svg()  → 寶箱 SVG
+_pose(rot, lidK, squash, hop)  → 搖晃＋箱蓋翻轉
+_mouth() → 固定在箱口
+
+/* 完結時只發事件 */
+if (u &gt; 1.3) { this.state = 'open';
+  this.dispatchEvent(new CustomEvent('treasure-chest:opened')); }</pre></div>
+      <div><h4 class="new">v1.3</h4><pre>/* 共用骨架＋四種圖形，各自提供 svg、pose、mouth、burst */
+const TYPES = { chest: {…}, trophy: {…}, gift: {…}, gacha: {…} };
+this.T = TYPES[o.type];
+_apply(u, rattle, rot, squash, hop)   /* 共用搖晃＋ T.pose() 開啟動作 */
+_mouth() → T.mouth(u)                 /* 出口會跟著杯子、扭蛋移動 */
+
+/* 完結時先顯示、刪除元素，再發事件 */
+if (v &gt; 1.24) { this.state = 'open';
+  const res = this._runTargets();      /* reveal-targets、remove-targets */
+  this.dispatchEvent(new CustomEvent('treasure-chest:opened',
+    { detail: { type, revealed, removed } })); }
+reset() → this._undoTargets();         /* 還原 */</pre></div>
+    </div>
+  </section>
+
+  <h3 class="cat">屬性</h3>
+  <table class="attr"><tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+    <tr><td>type</td><td>chest</td><td>圖形：chest 寶箱、trophy 獎盃、gift 禮物盒、gacha 轉蛋機（v1.3）。</td></tr>
+    <tr><td>size</td><td>220</td><td>圖形寬度（px）。整個舞台約為寬 2.2 倍、高 1.95 倍。</td></tr>
+    <tr><td>trigger</td><td>click</td><td>click：點擊開啟；auto：捲動到畫面中自動開啟；none：只用 open() 開啟。</td></tr>
+    <tr><td>delay</td><td>300</td><td>trigger="auto" 時，出現在畫面上之後等幾毫秒再開。</td></tr>
+    <tr><td>replay</td><td>關</td><td>已開啟的寶箱再點一次會關上，可以重來。</td></tr>
+    <tr><td>bg</td><td>base</td><td>舞台背景色。光芒邊緣會過渡到這個顏色，請設成和放置位置相同的底色。</td></tr>
+    <tr><td>gold、light</td><td>yellow、#FFF6C8</td><td>光芒的主色與最亮的中心色。</td></tr>
+    <tr><td>chest-color、trim-color</td><td>依 type</td><td>主體色與配件色，可寫色票名稱；明暗自動計算。預設值見範例 7 的表（v1.3 起依 type 不同）。</td></tr>
+    <tr><td>capsule-color</td><td>pink</td><td>轉蛋機掉出的扭蛋顏色（v1.3）。</td></tr>
+    <tr><td>rays</td><td>14</td><td>光芒條數；0 不畫光芒，只有光暈。</td></tr>
+    <tr><td>ray-speed</td><td>10</td><td>光芒旋轉速度（度／秒）。</td></tr>
+    <tr><td>sparkles</td><td>80</td><td>開箱瞬間噴出的星光數量。</td></tr>
+    <tr><td>coins</td><td>依 type</td><td>噴出物數量：寶箱、獎盃是金幣，禮物盒是彩紙，轉蛋機預設 0；0 不噴。</td></tr>
+    <tr><td>ambient</td><td>true</td><td>開啟後箱口持續冒出細小星光；寫 false 關閉。</td></tr>
+    <tr><td>shake</td><td>0.5</td><td>開箱前的搖晃強度，0 到 1，越大搖得越明顯、時間越長，大於 0.4 時還會往上跳；0 直接掀蓋。舊寫法 true 等同 0.5、false 等同 0（v1.2）。</td></tr>
+    <tr><td>hint</td><td>依 type</td><td>trigger="click" 時圖形下方的提示文字；寫空字串不顯示。</td></tr>
+    <tr><td>prize-bg、prize-color、prize-size</td><td>base、yellow、1.4rem</td><td>獎品框的底色、文字色、字級（只寫數字視為 rem）。外框用 gold 的顏色。</td></tr>
+    <tr><td>reveal-targets</td><td>無</td><td>動畫完結後要顯示的元素，逗號分隔；寫 id 可省略 #，也可寫選擇器（v1.3）。</td></tr>
+    <tr><td>remove-targets</td><td>無</td><td>動畫完結後要從頁面刪除的元素，寫法同上；reset() 會放回原位（v1.3）。</td></tr>
+    <tr><td>&lt;chest-prize&gt;</td><td>無</td><td>獎品內容，可以寫任何 HTML。</td></tr>
+  </table>
+  <h3 class="cat">方法與事件</h3>
+  <table class="attr"><tr><th>項目</th><th>類型</th><th>說明</th></tr>
+    <tr><td>open()</td><td>方法</td><td>開箱；已經打開時不作用。</td></tr>
+    <tr><td>play()</td><td>方法</td><td>同 open()，給 link-when 的 do="play" 使用（v1.1）。</td></tr>
+    <tr><td>reset()</td><td>方法</td><td>關回原狀，可以再開一次；同時還原 reveal-targets 與 remove-targets（v1.3）。</td></tr>
+    <tr><td>type</td><td>唯讀屬性</td><td>目前的圖形名稱（v1.3）。</td></tr>
+    <tr><td>opened</td><td>唯讀屬性</td><td>動畫是否已完成、寶箱已經打開。</td></tr>
+    <tr><td>treasure-chest:open</td><td>事件</td><td>開始開箱。</td></tr>
+    <tr><td>treasure-chest:opened</td><td>事件</td><td>動畫完結（寶箱約 2 秒、轉蛋機約 3.4 秒）。detail 有 type、revealed、removed（v1.3）。</td></tr>
+    <tr><td>treasure-chest:reset</td><td>事件</td><td>關回原狀。都會冒泡。</td></tr>
+    <tr><td>link-when</td><td>串接</td><td>event="done" 對應 treasure-chest:opened；當 target 時 do="play" 開箱（v1.1）。</td></tr>
+  </table>
+</div>
+<!-- 範例 5 用到 ielts repo 的 ui-stream 與 link-when（穩定版 v1.5），需要連網；其他範例離線也能用 -->
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/flow/ui-stream.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/lw/link-when.js"></script>
+<script src="treasure-chest.js"></script>
+<script>
+  const chest = document.getElementById('api'), log = document.getElementById('log');
+  document.getElementById('b-open').onclick = () => chest.open();
+  document.getElementById('b-reset').onclick = () => chest.reset();
+  /* 範例 6：同時開箱 */
+  document.getElementById('b-all').onclick = () => document.querySelectorAll('#shake-row treasure-chest').forEach(c => { c.reset(); c.open(); });
+  ['open', 'opened', 'reset'].forEach(ev => chest.addEventListener('treasure-chest:' + ev, () => { log.textContent = `treasure-chest:${ev}　opened = ${chest.opened}`; }));
+  ['b-types', 'b-colors'].forEach((b, i) => { document.getElementById(b).onclick = () => document.querySelectorAll(['#type-row', '#color-row'][i] + ' treasure-chest').forEach(c => { c.reset(); c.open(); }); });
+  /* 範例 9 */
+  const rv = document.getElementById('rv'), rvLog = document.getElementById('rv-log');
+  document.getElementById('b-rv-reset').onclick = () => rv.reset();
+  rv.addEventListener('treasure-chest:opened', e => { rvLog.textContent = `opened：revealed ${e.detail.revealed.map(x => '#' + x.id).join('、')}；removed ${e.detail.removed.map(x => '#' + x.id).join('、')}`; });
+  rv.addEventListener('treasure-chest:reset', () => { rvLog.textContent = 'reset：已還原'; });
+</script>
+</body>
+</html>
