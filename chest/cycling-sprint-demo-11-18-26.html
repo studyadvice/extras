@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cycling-sprint 單車衝刺動畫 v1.0（11-18-26）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<style>
+  body{margin:0;background:#0C0D0C;color:#C6C7BD;font-family:"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",system-ui,sans-serif;font-size:1rem;min-width:1280px;}
+  .wrap{max-width:1500px;margin:0 auto;padding:24px 32px 80px 32px;}
+  h1{font-size:1.7rem;font-weight:800;color:#DBEDD8;margin:0 0 6px 0;}
+  h1 code{color:#51DBCF;font-size:1.2rem;}
+  .sub{color:#86877F;font-size:0.95rem;margin:0 0 28px 0;line-height:1.7;}
+  section{margin:0 0 56px 0;}
+  .sec-title{display:flex;align-items:baseline;gap:12px;margin:0 0 14px 0;}
+  .sec-title h2{font-size:1.25rem;font-weight:700;color:#B484E8;margin:0;}
+  .sec-title p{margin:0 0 0 auto;font-size:0.85rem;color:#86877F;}
+  .two{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start;}
+  pre{background:#161716;border:1px solid #3B2A20;border-radius:8px;padding:14px 18px;color:#C6C7BD;font-size:0.8rem;margin:0;white-space:pre-wrap;font-family:Consolas,"Cascadia Mono",ui-monospace,monospace;line-height:1.6;}
+  code{color:#51DBCF;font-family:Consolas,"Cascadia Mono",ui-monospace,monospace;}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px 0;}
+  .btns button{background:#0C0D0C;border:1px solid #51DBCF;color:#51DBCF;border-radius:6px;padding:4px 14px;font-size:0.9rem;cursor:pointer;font-family:inherit;}
+  .btns button:hover{background:#51DBCF;color:#0C0D0C;}
+  .alert{font-size:0.9rem;margin:12px 0 0 0;}
+  .gate{border:2px dashed #86877F;border-radius:12px;padding:16px 20px;color:#86877F;margin:12px 0 0 0;max-width:640px;}
+  .next{border:2px solid #71CD76;border-radius:12px;padding:16px 20px;color:#71CD76;font-weight:700;margin:12px 0 0 0;max-width:640px;}
+  input[type=range]{width:640px;accent-color:#51DBCF;}
+  h2.part{font-size:1.45rem;font-weight:800;color:#E3D322;margin:56px 0 24px 0;padding:0 0 10px 0;border-bottom:2px solid #3B2A20;}
+  table.attr{width:100%;border-collapse:collapse;font-size:0.88rem;margin:0 0 28px 0;}
+  table.attr th{text-align:left;color:#0C0D0C;background:#C6C7BD;padding:6px 12px;}
+  table.attr td{padding:7px 12px;border-bottom:1px solid #3B2A20;vertical-align:top;color:#DBEDD8;line-height:1.6;}
+  table.attr td:first-child{color:#51DBCF;font-family:Consolas,ui-monospace,monospace;white-space:nowrap;}
+  table.attr td:nth-child(2){color:#E3D322;white-space:nowrap;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><code>&lt;cycling-sprint&gt;</code> 單車衝刺動畫 v1.0</h1>
+  <p class="sub">選手起步、加速、站起來衝刺，撞斷終點彩帶，彩紙噴出，舉手歡呼，最後彈出成績。背景有視差捲動的遠山、近山、夕陽與看台人群，可加 0 到 2 位對手。全部畫在 canvas 上，單一 cycling-sprint.js，CSS 內建，不用 Shadow DOM，不需要任何外部資源，離線也能用（本頁的 Bootstrap 只用在下方的訊息框）。顏色全部是實色，不使用透明度。</p>
+
+  <h2 class="part">範例</h2>
+
+  <section>
+    <div class="sec-title"><h2>範例 1：點擊衝刺，兩位對手</h2><p>加上 replay，播完再點一次會回到起跑線。</p></div>
+    <div class="two">
+      <cycling-sprint id="c1" size="640" replay><sprint-result>Band 7.0 衝線！</sprint-result></cycling-sprint>
+      <pre>&lt;cycling-sprint size="640" replay&gt;
+  &lt;sprint-result&gt;Band 7.0 衝線！&lt;/sprint-result&gt;
+&lt;/cycling-sprint&gt;
+
+&lt;script src="cycling-sprint.js"&gt;&lt;/script&gt;
+
+時間軸（duration 預設 5200 毫秒）
+  0 到 56%   起步、加速，背景視差捲動
+  56 到 80%  站起來衝刺，出現速度線，把對手甩在後面
+  80%        前輪撞斷彩帶，彩紙噴出
+  80 到 100% 舉手歡呼、滑行、停下，成績彈出</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 2：捲動到畫面中自動播放，換顏色，沒有對手</h2><p>trigger="auto" 在畫面進入 60% 後自動開始。</p></div>
+    <div class="two">
+      <cycling-sprint size="640" trigger="auto" delay="400" rivals="0" jersey="pink" shorts="violet" helmet-color="key" bike-color="blue" sky-top="base" sky-bottom="indigo" tape-color="energetic" gate-text="GOAL" duration="4200" replay>
+        <sprint-result>個人最佳！</sprint-result>
+      </cycling-sprint>
+      <pre>&lt;cycling-sprint size="640" trigger="auto" delay="400" rivals="0"
+  jersey="pink" shorts="violet" helmet-color="key" bike-color="blue"
+  sky-bottom="indigo" tape-color="energetic" gate-text="GOAL" duration="4200" replay&gt;
+  &lt;sprint-result&gt;個人最佳！&lt;/sprint-result&gt;
+&lt;/cycling-sprint&gt;</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 3：過線後顯示或刪除元素，並接收事件</h2><p>reveal-targets 與 remove-targets 的寫法和 treasure-chest 相同。</p></div>
+    <div class="two">
+      <div>
+        <cycling-sprint id="c3" size="640" duration="4000" reveal-targets="c3-next" remove-targets="c3-lock" replay><sprint-result>完賽！</sprint-result></cycling-sprint>
+        <div id="c3-lock" class="gate">鎖定中：衝過終點才會解鎖下一課</div>
+        <div id="c3-next" class="next" hidden>下一課：Speaking Part 3 延伸回答</div>
+        <div id="c3-log" class="alert alert-secondary" role="status">點上面的畫面開始。</div>
+      </div>
+      <pre>&lt;cycling-sprint id="c3" duration="4000" reveal-targets="c3-next" remove-targets="c3-lock" replay&gt;
+  &lt;sprint-result&gt;完賽！&lt;/sprint-result&gt;
+&lt;/cycling-sprint&gt;
+&lt;div id="c3-lock"&gt;鎖定中…&lt;/div&gt;
+&lt;div id="c3-next" hidden&gt;下一課…&lt;/div&gt;
+
+const c3 = document.getElementById('c3');
+c3.addEventListener('cycling-sprint:start',    () =&gt; …);
+c3.addEventListener('cycling-sprint:finish',   () =&gt; …);   // 前輪撞斷彩帶那一刻
+c3.addEventListener('cycling-sprint:finished', e =&gt; e.detail);   // { revealed, removed }
+c3.play();    // 開始
+c3.reset();   // 回到起跑線，並還原 reveal 與 remove</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-title"><h2>範例 4：seek() 拖曳預覽任何一個瞬間</h2><p>trigger="none"：不會自己播放，用滑桿或 play() 控制。設計配色時很好用。</p></div>
+    <div class="two">
+      <div>
+        <cycling-sprint id="c4" size="640" trigger="none" jersey="green" shorts="gray"><sprint-result>金牌</sprint-result></cycling-sprint>
+        <div class="btns" style="margin:12px 0 0 0"><input type="range" id="c4-r" min="0" max="1000" value="0"></div>
+        <div class="btns"><button id="c4-p">play()</button><button id="c4-s">reset()</button></div>
+      </div>
+      <pre>&lt;cycling-sprint id="c4" trigger="none" jersey="green" shorts="gray"&gt;…&lt;/cycling-sprint&gt;
+
+c4.seek(0.7);    // 畫出 70% 那一刻（0 到 1），可連續呼叫
+c4.play();       // 從頭播放
+c4.reset();      // 回到起跑線</pre>
+    </div>
+  </section>
+
+  <h2 class="part" id="attrs">屬性總覽</h2>
+  <table class="attr"><tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+    <tr><td>size</td><td>640</td><td>畫面寬度（px），高度是寬度的 0.55 倍，最小 240、最大 1600。</td></tr>
+    <tr><td>trigger</td><td>click</td><td><code>click</code> 點擊開始；<code>auto</code> 捲動到畫面中自動開始；<code>none</code> 只用 <code>play()</code>。</td></tr>
+    <tr><td>delay</td><td>300</td><td>auto 時，出現在畫面上之後等幾毫秒再開始。</td></tr>
+    <tr><td>duration</td><td>5200</td><td>整段動畫的毫秒數（2000 到 20000）。</td></tr>
+    <tr><td>rivals</td><td>2</td><td>對手人數，0 到 2。</td></tr>
+    <tr><td>replay</td><td>關</td><td>播完再點一次會回到起跑線。</td></tr>
+    <tr><td>standing</td><td>true</td><td>衝刺時選手是否站起來；寫 false 全程坐著。</td></tr>
+    <tr><td>jersey、shorts、helmet-color、bike-color、skin-color</td><td>yellow、indigo、vanilla、red、salmon</td><td>選手的車衣、車褲、安全帽、車架、膚色。</td></tr>
+    <tr><td>sky-top、sky-bottom</td><td>base、bg-alternative</td><td>天空由上到下的漸層（兩端都是實色）。</td></tr>
+    <tr><td>tape-color</td><td>pink</td><td>終點彩帶顏色。</td></tr>
+    <tr><td>gate-text</td><td>FINISH</td><td>終點拱門橫幅上的文字。</td></tr>
+    <tr><td>crowd</td><td>true</td><td>是否畫看台人群；終點附近比較密，過線後會舉手歡呼。</td></tr>
+    <tr><td>confetti</td><td>80</td><td>過線時噴出的彩紙數量，0 不噴。</td></tr>
+    <tr><td>hint</td><td>點擊衝刺</td><td>trigger="click" 時畫面下方的提示文字；寫空字串不顯示。</td></tr>
+    <tr><td>radius</td><td>14</td><td>畫面圓角（px）。</td></tr>
+    <tr><td>accent</td><td>yellow</td><td>成績框的外框色。</td></tr>
+    <tr><td>prize-bg、prize-color、prize-size</td><td>base、yellow、1.4rem</td><td>成績框的底色、文字色、字級（只寫數字視為 rem）。</td></tr>
+    <tr><td>reveal-targets、remove-targets</td><td>無</td><td>動畫結束後要顯示、要刪除的元素，用逗號分隔，寫 id 可省略 #。</td></tr>
+  </table>
+  <p class="sub">顏色屬性可以寫色票名稱（yellow、key、playful…）或任何 CSS 顏色。方法：<code>play()</code>、<code>reset()</code>、<code>seek(0 到 1)</code>、唯讀 <code>finished</code>。事件：<code>cycling-sprint:start</code>、<code>:finish</code>、<code>:finished</code>、<code>:reset</code>，都會冒泡。支援 <code>&lt;link-when event="done"&gt;</code>（對應 <code>:finished</code>）。</p>
+</div>
+<script src="cycling-sprint.js"></script>
+<script>
+  const c3 = document.getElementById('c3'), log3 = document.getElementById('c3-log');
+  const say = (cls, t) => { log3.className = 'alert alert-' + cls; log3.textContent = t; };
+  c3.addEventListener('cycling-sprint:start', () => say('info', '出發！'));
+  c3.addEventListener('cycling-sprint:finish', () => say('warning', '前輪撞斷彩帶。'));
+  c3.addEventListener('cycling-sprint:finished', e => say('success', `完賽：顯示 ${e.detail.revealed.length} 個元素，刪除 ${e.detail.removed.length} 個元素。`));
+  c3.addEventListener('cycling-sprint:reset', () => say('secondary', '回到起跑線。'));
+  const c4 = document.getElementById('c4'), r4 = document.getElementById('c4-r');
+  r4.addEventListener('input', () => c4.seek(r4.value / 1000));
+  document.getElementById('c4-p').onclick = () => { if (c4.state === 'finished') c4.reset(); c4.play(); };
+  document.getElementById('c4-s').onclick = () => { c4.reset(); r4.value = 0; };
+</script>
+</body>
+</html>
