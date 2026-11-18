@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ui-opener 課程片頭動畫（夜間城市與捷運 v0.2.2，11-19-26）</title>
+<style>
+  :root { font-size: 16px; }
+  body { background: #0C0D0C; color: #C6C7BD; font-family: "微軟正黑體", "Inter", sans-serif; padding: 28px; min-width: 988px; }
+  .wrap { width: 95%; margin: 0 auto; }
+  h1 { font-size: 1.8rem; font-weight: 800; color: #DBEDD8; margin: 0 0 6px 0; }
+  h1 code { color: #51DBCF; font-size: 1.4rem; }
+  .sub { color: #86877F; margin: 0 0 32px 0; }
+  h2 { font-size: 1.3rem; font-weight: 700; color: #51DBCF; margin: 48px 0 8px 0; padding: 0 0 8px 0; border-bottom: 2px solid #3B2A20; }
+  h2.ver { font-size: 1.5rem; color: #DBEDD8; border-bottom: 2px solid #51DBCF; margin-top: 56px; }
+  p.note { color: #86877F; font-size: 0.9rem; margin: 6px 0 14px 0; }
+  pre { background: #161716; border: 1px solid #3B2A20; border-radius: 8px; padding: 14px 18px; color: #C6C7BD; font-size: 0.82rem; margin: 12px 0 0 0; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin: 12px 0 0 0; }
+  th { text-align: left; color: #0C0D0C; background: #C6C7BD; padding: 6px 12px; }
+  td { padding: 7px 12px; border-bottom: 1px solid #3B2A20; vertical-align: top; color: #DBEDD8; }
+  td:first-child { color: #51DBCF; font-family: ui-monospace, Menlo, Consolas, monospace; white-space: nowrap; }
+  td:nth-child(2) { color: #86877F; white-space: nowrap; }
+  ui-opener { border: 2px solid #3B2A20; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><code>&lt;ui-opener&gt;</code> 課程片頭動畫</h1>
+  <p class="sub">元件檔：<code>ui-opener.js</code>。全程不用透明度，消失以縮小或遮罩表現。越新的版本放越上面。</p>
+
+  <h2 class="ver">v0.2.2　11-19-26　捷運縮小 5%、月亮表面陰影</h2>
+  <ul style="font-size:0.95rem;color:#DBEDD8;line-height:1.9;margin:0 0 12px 0;padding:0 0 0 24px;">
+    <li>捷運車廂整體縮小 5%（含遠近縮放與車廂間距），直線段的列車看起來更從容。</li>
+    <li>月亮表面加上右下側的弱陰影與四個小坑洞，皆為實色（shell 色），不使用透明度。</li>
+  </ul>
+  <ui-opener lesson="Lesson 1" subtitle="例句第二版" controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 1" subtitle="例句第二版" controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2 class="ver">v0.2.1　11-19-26　進場同步、車速分車道、修正轎車方向</h2>
+  <p class="note">以下範例與上一版相同的屬性寫法，播放時已套用新行為：</p>
+  <ul style="font-size:0.95rem;color:#DBEDD8;line-height:1.9;margin:0 0 12px 0;padding:0 0 0 24px;">
+    <li>月亮浮現與捷運進入畫面幾乎同時（約 0.5 秒），後面的亮燈、停車、開門、標題都順著提前；整段約 5.3 秒。</li>
+    <li>車流分四條車道，每條車道速度不同：外側車道快（機車為主），內側車道慢（公車、卡車為主），轎車分散在各車道。同車道速度一致，所以不會互相穿過。</li>
+    <li>轎車車頭原本朝後，已改為朝行進方向；計程車與其他轎車都一樣。</li>
+  </ul>
+  <ui-opener lesson="Lesson 1" subtitle="例句第二版" controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 1" subtitle="例句第二版" controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2 class="ver">v0.2.0　11-19-26　轉彎高架橋、遠近車廂、高架橋下的車流</h2>
+  <p class="note">移除火山與書桌兩個場景，只保留夜間城市與捷運。</p>
+
+  <h2>範例 1　預設（公車 2、卡車 2、轎車 6、機車 8）</h2>
+  <p class="note">捷運從遠方沿彎道駛近：車廂越近越大，並隨彎道旋轉；停在直線段後車門打開，標題浮現。</p>
+  <ui-opener lesson="Lesson 1" subtitle="例句第二版" controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 1" subtitle="例句第二版" controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2>範例 2　車流加倍 <code>traffic="2"</code></h2>
+  <p class="note">總量上限 22 輛，超過時會被截斷，以免同一車道重疊。</p>
+  <ui-opener lesson="Lesson 1" subtitle="例句第二版" traffic="2" controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 1" subtitle="例句第二版" traffic="2" controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2>範例 3　只剩機車與轎車 <code>bus="0" truck="0" car="4" scooter="14"</code></h2>
+  <ui-opener lesson="Lesson 1" subtitle="例句第二版" bus="0" truck="0" car="4" scooter="14" controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 1" subtitle="例句第二版" bus="0" truck="0" car="4" scooter="14" controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2>範例 4　沒有車流、四節車廂 <code>traffic="0" train-cars="4"</code></h2>
+  <ui-opener lesson="Lesson 1" subtitle="例句第二版" traffic="0" train-cars="4" controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 1" subtitle="例句第二版" traffic="0" train-cars="4" controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2>範例 5　換色、放慢、顯示安全區</h2>
+  <p class="note">accent 改藍、spark 改粉紅、速度 0.7 倍，虛線為 5% 安全區，錄影前請拿掉 <code>show-safe</code>。</p>
+  <ui-opener lesson="Lesson 2" title="橫向練習" subtitle="Part 2 落地" accent="blue" spark="pink" rate="0.7" show-safe controls width="960px"></ui-opener>
+  <pre>&lt;ui-opener lesson="Lesson 2" title="橫向練習" subtitle="Part 2 落地"
+           accent="blue" spark="pink" rate="0.7" show-safe controls width="960px"&gt;&lt;/ui-opener&gt;</pre>
+
+  <h2>屬性速查</h2>
+  <table>
+    <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+    <tr><td>bus</td><td>2</td><td>公車數量（青綠車身、一排車窗，最長）。</td></tr>
+    <tr><td>truck</td><td>2</td><td>卡車數量（灰色貨箱加駕駛艙，三個輪子）。</td></tr>
+    <tr><td>car</td><td>6</td><td>轎車數量，其中黃色的是計程車（車頂有燈）。</td></tr>
+    <tr><td>scooter</td><td>8</td><td>機車數量（兩輪加騎士，戴青綠安全帽）。</td></tr>
+    <tr><td>traffic</td><td>1</td><td>車流總倍率，乘在上面四個數量上；<code>0</code> 沒有車。</td></tr>
+    <tr><td>traffic-speed</td><td>130</td><td>基準車速（每秒像素）。四條車道各乘以不同倍率：遠側外 1.45、遠側內 0.8、近側內 0.9、近側外 1.3。</td></tr>
+    <tr><td>train-cars</td><td>3</td><td>捷運車廂數，2 到 5。</td></tr>
+    <tr><td>title</td><td>IELTS Speaking Tutorial Series</td><td>主標題；寫成空字串則不顯示。</td></tr>
+    <tr><td>subtitle</td><td>無</td><td>副標題。</td></tr>
+    <tr><td>lesson</td><td>無</td><td>課次徽章文字，例如 <code>Lesson 1</code>。</td></tr>
+    <tr><td>show-title</td><td>true</td><td><code>false</code> 只播場景，不出文字。</td></tr>
+    <tr><td>rate</td><td>1</td><td>播放速度倍率，影響所有動作含車流。</td></tr>
+    <tr><td>autoplay</td><td>進入畫面 60% 時</td><td><code>false</code> 時不自動播放。</td></tr>
+    <tr><td>loop、loop-gap</td><td>無、1500</td><td>播完重播；兩次之間的停頓（毫秒）。</td></tr>
+    <tr><td>controls</td><td>false</td><td>右下角顯示「播放／暫停」「重播」。</td></tr>
+    <tr><td>width</td><td>100%</td><td>元件寬度，高度固定 16:9。</td></tr>
+    <tr><td>safe、show-safe</td><td>5、false</td><td>安全區百分比；用虛線框出供檢查。</td></tr>
+    <tr><td>title-y</td><td>20</td><td>標題區塊的垂直中心（百分比）。</td></tr>
+    <tr><td>title-size、subtitle-size、lesson-size</td><td>5.2rem、1.7rem、1.6rem</td><td>字級；只寫數字視為 rem。</td></tr>
+    <tr><td>bg</td><td>background</td><td>底色。</td></tr>
+    <tr><td>accent</td><td>key</td><td>課次徽章、車廂條紋、公車車身、機車安全帽。</td></tr>
+    <tr><td>spark</td><td>yellow</td><td>亮燈的窗、車門內裝、計程車、車燈。</td></tr>
+    <tr><td>shape</td><td>bg-alternative</td><td>建築與橋墩的剪影色。</td></tr>
+    <tr><td>text-color、subtitle-color</td><td>vanilla、shell</td><td>主標題與副標題的文字色。</td></tr>
+  </table>
+  <p class="note">顏色可寫色票名稱或色碼。方法 <code>play()</code>、<code>pause()</code>、<code>toggle()</code>、<code>restart()</code>，事件 <code>opener-start</code>、<code>opener-end</code>，唯讀屬性 <code>duration</code>。場景總長約 5.3 秒（速度 1 倍，依車廂數略有不同），最後停在標題畫面，車流持續循環。</p>
+
+  <h2 class="ver">v0.1.0　11-19-26　粗製版（已被取代）</h2>
+  <p class="note">v0.1.0 有火山、夜間城市、深夜書桌三個場景，並有 <code>scene</code> 屬性。v0.2.0 依需求只保留夜間城市，<code>scene</code> 屬性已移除，舊場景的程式碼不再提供；夜間城市的舊版（直線橋、無車流）由上方的新版取代。</p>
+</div>
+<script src="ui-opener.js"></script>
+</body>
+</html>
