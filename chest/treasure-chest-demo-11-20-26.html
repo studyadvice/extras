@@ -8,48 +8,172 @@
 <style>
   :root {
     --bg: #0C0D0C; --shell: #C6C7BD; --vanilla: #DBEDD8; --yellow: #E3D322; --blue: #5DBAE8;
-    --gray: #86877F; --line: #3B2A20; --key: #51DBCF; --red: #EF6661;
+    --gray: #86877F; --line: #3B2A20; --key: #51DBCF; --red: #EF6661; --green: #71CD76;
   }
   *, *::before, *::after { box-sizing: border-box; }
   html, body { background: var(--bg); color: var(--shell); }
   body { font-family: "微軟正黑體", "Inter", sans-serif; font-size: 1rem; margin: 0; }
   .page { max-width: 1680px; margin: 0 auto; padding: 32px 40px 80px 40px; }
   h1 { color: var(--vanilla); font-size: 2rem; font-weight: 700; margin: 0 0 8px 0; }
-  .lead-note { color: var(--gray); margin: 0 0 24px 0; }
+  .lead-note { color: var(--gray); margin: 0 0 24px 0; line-height: 1.7; }
   .lead-note code, .demo code, .ref code { color: var(--yellow); background: transparent; }
-  .lead-note b { color: var(--yellow); }
-  .version { color: var(--blue); font-size: 1.1rem; margin: 32px 0 12px 0; }
+  .part { color: var(--blue); font-size: 1.1rem; margin: 40px 0 12px 0; padding: 0 0 8px 0; border-bottom: 1px solid var(--line); }
   .demo { border: 1px solid var(--line); border-radius: 10px; padding: 24px; margin: 0 0 28px 0; background: #121312; }
   .demo h2 { font-size: 1.35rem; color: var(--blue); margin: 0 0 6px 0; }
-  .demo .desc { font-size: 0.95rem; margin: 0 0 16px 0; }
+  .demo .desc { font-size: 0.95rem; margin: 0 0 16px 0; line-height: 1.7; }
   .pair { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 24px; align-items: start; }
+  .demo.full .pair { grid-template-columns: minmax(0, 1fr); }
   .pair-label { font-size: 0.8rem; color: var(--gray); letter-spacing: 0.05em; margin: 0 0 8px 0; }
   pre.code { margin: 0; padding: 16px; border-radius: 8px; background: #1A1B1A; color: var(--vanilla);
              font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 620px; overflow: auto; }
-  .stage { border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .stage { border: 1px solid var(--line); border-radius: 8px; padding: 20px; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 16px; }
   .stage .note-box { width: 100%; text-align: center; color: var(--vanilla); border: 1px dashed var(--gray); border-radius: 8px; padding: 12px; margin: 0; }
+  .stage figure { margin: 0; text-align: center; }
+  .stage figcaption { margin: 6px 0 0 0; color: var(--yellow); font-family: Consolas, ui-monospace, monospace; font-size: 0.85rem; }
+  .stage .chain { width: 100%; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
+  .stage .msg { border: 2px solid var(--green); color: var(--green); border-radius: 12px; padding: 12px 20px; font-size: 1.1rem; font-weight: 700; }
+  .stage .lock { border: 2px dashed var(--gray); color: var(--gray); border-radius: 12px; padding: 14px 20px; width: 100%; }
+  .stage .unlock { border: 2px solid var(--green); color: var(--vanilla); border-radius: 12px; padding: 14px 20px; width: 100%; }
+  .stage .unlock b { color: var(--green); }
+  .stage .group { width: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .stage .card-in { display: flex; align-items: center; gap: 24px; background: #141514; border-radius: 12px; padding: 16px 24px; width: 100%; }
+  .stage .card-in h3 { font-size: 1.2rem; color: var(--vanilla); margin: 0 0 6px 0; }
+  .stage .card-in p { margin: 0; color: var(--gray); line-height: 1.7; }
   .alert-zone { position: fixed; top: 16px; right: 16px; z-index: 2000; width: 340px; }
   .alert-zone .alert { background: #1B1C1B; color: var(--vanilla); border: 1px solid var(--blue); font-size: 0.9rem; margin: 0 0 8px 0; }
-  .four { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-  .four .tname { color: var(--vanilla); font-weight: 700; margin: 0 0 8px 0; }
-  .four treasure-chest { max-width: 100%; }
-  .ref { width: 100%; border-collapse: collapse; }
-  .ref th, .ref td { border-bottom: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  .ref { width: 100%; border-collapse: collapse; margin: 0 0 24px 0; }
+  .ref th, .ref td { border-bottom: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; font-size: 0.9rem; line-height: 1.6; }
   .ref th { color: var(--vanilla); }
+  .ref td:first-child { white-space: nowrap; }
 </style>
 </head>
 <body>
 <div class="alert-zone" id="alert-zone"></div>
 <div class="page">
   <h1>treasure-chest：開寶箱的獎勵動畫</h1>
-  <p class="lead-note">本檔的範例與程式碼成對，越新的版本放越上面。每個範例的「畫面」與「程式碼」由同一段原始碼產生。<br>
-  <b>11-20-26</b>：新增四種圖形。<code>book</code> 魔法書、<code>almanac</code> 農民曆、<code>receipt</code> 對發票機、<code>tudigong</code> 土地公；新增三種噴出物（文字、發票紙片、元寶）與屬性 <code>words</code>、<code>stamp</code>、<code>cover-text</code>、<code>digits</code>。<br>
-  <b>原有</b>：<code>chest</code> 寶箱、<code>trophy</code> 獎盃、<code>gift</code> 禮物盒、<code>gacha</code> 轉蛋機，放在本檔最下方對照。</p>
+  <p class="lead-note">一個元件、十四種圖形，用 <code>type</code> 切換：<code>chest</code> 寶箱、<code>trophy</code> 獎盃、<code>gift</code> 禮物盒、<code>gacha</code> 轉蛋機、<code>book</code> 魔法書、<code>almanac</code> 農民曆、<code>receipt</code> 對發票機、<code>tudigong</code> 土地公、<code>news</code> 新聞快報、<code>curtain</code> 拉布幕、<code>shuttle</code> 太空梭、<code>tram</code> 輕軌、<code>calendar</code> 撕日曆、<code>street</code> 街道。越新增的範例放越上面；每個範例的「畫面」與「程式碼」由同一段原始碼產生。單一 <code>treasure-chest.js</code>，CSS 內建，不用 Shadow DOM。</p>
 
-  <h2 class="version">11-20-26：新增四種圖形</h2>
+  <h2 class="part">街道（沒有光芒）</h2>
 
   <section class="demo" data-demo>
-    <h2>範例 11-20-A：魔法書 <code>type="book"</code></h2>
+    <h2>街道 <code>type="street"</code></h2>
+    <p class="desc">約 45 度俯視的十字路口，面對鏡頭的轉角是超商，轉角切出一個斜面當作入口，門上有條紋遮陽棚。<code>density</code>（0 到 10，預設 5）同時決定兩件事：每秒有多少顧客走進超商，以及四個車道的車流量；0 就是空街。顧客從兩條人行道走來，走進店裡，過一陣子提著袋子走出來，進出時門會亮起。車子會跟車、遇到紅燈與黃燈停在停止線前排隊，紅綠燈由兩路輪流放行（柱子上兩顆燈，左邊是左右向的車，右邊是前後向的車）。載入時先暖機 8 秒，待機時就已經有車有人，點一下才開始動。有 <code>chest-prize</code> 才會在 3.5 秒後出現文字，街景會持續運作到按 reset。和 shuttle、tram 一樣，預設沒有光芒、星光和噴出物。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（點視窗開始，開完再點一次重來）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="street" size="230" replay density="3">
+  <chest-prize>歡迎光臨</chest-prize>
+</treasure-chest>
+<treasure-chest type="street" size="230" replay density="9"
+                chest-color="salmon">
+</treasure-chest>
+    </script>
+  </section>
+
+  <h2 class="part">撕日曆（沒有光芒）</h2>
+
+  <section class="demo" data-demo>
+    <h2>撕日曆 <code>type="calendar"</code></h2>
+    <p class="desc">牆上的日曆一張一張被撕下，每張先從右上角被掀起，再脫手往左下掉，每撕一張整本日曆會在釘子上晃一下，最後停在 <code>date</code> 指定的日期。<code>date</code> 可以寫 2026-11-20、11-20 或 20（沒寫就是今天）；<code>tear</code> 是撕幾張，預設 5，所以第一張是 <code>date</code> 往前推 <code>tear</code> 天，跨月、跨年會自動換成正確的月份與年份。週六、週日的字是紅色。有寫 <code>chest-prize</code> 才會在最後出現文字，沒寫就直接結束。和 shuttle、tram 一樣，預設沒有光芒、星光和噴出物。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（點日曆開始撕，開完再點一次重來）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="calendar" size="170" replay
+                date="2026-12-12">
+  <chest-prize>雅思考試日</chest-prize>
+</treasure-chest>
+<treasure-chest type="calendar" size="170" replay
+                date="12-31" tear="3" chest-color="blue">
+</treasure-chest>
+    </script>
+  </section>
+
+  <h2 class="part">太空梭與輕軌（沒有光芒）</h2>
+
+  <section class="demo" data-demo>
+    <h2>太空梭 <code>type="shuttle"</code></h2>
+    <p class="desc">太空梭沿著傾斜的軌道繞地球飛一圈，繞到地球後面時會被擋住，頭尾慢、中間快，噴射火焰只在飛行時出現，地球一直緩緩自轉。回到起點之後，文字才出現。這兩種圖形沒有金色光芒、星光和噴出物（<code>rays</code>、<code>sparkles</code>、<code>ambient</code> 預設都是關），要的話可以自己用屬性打開。<code>chest-color</code> 是海洋的顏色。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（點視窗發射，開完再點一次重來）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="shuttle" size="170" replay>
+  <chest-prize>學習無極限</chest-prize>
+</treasure-chest>
+<treasure-chest type="shuttle" size="170" replay
+                chest-color="violet" shake="0">
+  <chest-prize>Band 7.0</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>輕軌 <code>type="tram"</code></h2>
+    <p class="desc">輕軌車廂從遠方的地平線出發，先沿著軌道直行，再轉彎，朝鏡頭駛來，慢慢煞住停在跟前，文字出現。畫面是真正的透視投影：車廂是一個長方體，每一幀依照在軌道上的位置和方向，重新算出看得到的車頭、側面和車頂，所以轉彎時可以看到側面逐漸轉成正面。<code>chest-color</code> 是車身的色帶顏色。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="tram" size="170" replay>
+  <chest-prize>下一站 Band 7</chest-prize>
+</treasure-chest>
+<treasure-chest type="tram" size="170" replay
+                chest-color="blue" shake="0">
+  <chest-prize>準時抵達</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <h2 class="part">新聞快報與拉布幕</h2>
+
+  <section class="demo" data-demo>
+    <h2>新聞快報 <code>type="news"</code></h2>
+    <p class="desc">老電視頂上的警示燈轉起來，螢幕像映像管一樣從一條白線展開，先出現彩條，再切到轉動的地球，紅色 NEWS 條從左邊滑入，報紙從電視裡噴出。畫面上只有 NEWS 一個英文字。<code>cover-text</code> 是選用的課程標題，會出現在下方字幕條；文字比字幕條長會自動跑馬燈，不寫就是灰色的示意字條。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（點電視打開，開完再點一次重來）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="news" size="170" replay>
+  <chest-prize>今日重點</chest-prize>
+</treasure-chest>
+<treasure-chest type="news" size="170" replay
+                chest-color="violet"
+                cover-text="Unit 3 Describe a place 口說題型整理">
+  <chest-prize>新增 12 個語塊</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>拉布幕 <code>type="curtain"</code></h2>
+    <p class="desc">兩側紅布幔往外拉開，聚成窄窄一條，金色匾額彈出，底下堆著元寶，元寶往上噴出。匾額上的字用 <code>cover-text</code> 設定：六個字以內單行，更長會拆成兩行，英文會在空白處拆；不寫就是一個大元寶。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="curtain" size="170" replay
+                cover-text="雅思七分">
+  <chest-prize>目標達成</chest-prize>
+</treasure-chest>
+<treasure-chest type="curtain" size="170" replay
+                cover-text="Band 7.0 Speaking" chest-color="urgent">
+  <chest-prize>口說衝刺</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <h2 class="part">魔法書、農民曆、對發票機、土地公</h2>
+
+  <section class="demo" data-demo>
+    <h2>魔法書 <code>type="book"</code></h2>
     <p class="desc">封面翻開，四張書頁依序翻過去，翻完時光芒從書脊噴出，文字從書頁飄起來。<code>words</code> 用逗號分隔，沒寫就用預設的「Aa、Bb、學、習、7.0、Good」。<code>cover-text</code> 會印在封面下方。動畫結束後，<code>reveal-targets</code> 指定的元素才會出現。</p>
     <div class="pair">
       <div><p class="pair-label">畫面（點書打開，開完再點一次重來）</p><div class="stage"></div></div>
@@ -70,7 +194,7 @@
   </section>
 
   <section class="demo" data-demo>
-    <h2>範例 11-20-B：農民曆 <code>type="almanac"</code></h2>
+    <h2>農民曆 <code>type="almanac"</code></h2>
     <p class="desc">紅皮農民曆翻開，停在今天那頁，大大的印章砰一聲蓋下，蓋下的瞬間光芒噴出。<code>stamp</code> 是印章上的字，一到兩個字最好看；<code>cover-text</code> 預設是「農民曆」，最多五個字，由上往下直排。</p>
     <div class="pair">
       <div><p class="pair-label">畫面</p><div class="stage"></div></div>
@@ -89,7 +213,7 @@
   </section>
 
   <section class="demo" data-demo>
-    <h2>範例 11-20-C：對發票機 <code>type="receipt"</code></h2>
+    <h2>對發票機 <code>type="receipt"</code></h2>
     <p class="desc">機器上的號碼先滾動，由左到右一個一個停下來，發票像印表機一樣一格一格吐出，最後蓋上印章。<code>digits</code> 是八位數字，<code>stamp</code> 是印章字樣。噴出的是飛舞的發票紙片。</p>
     <div class="pair">
       <div><p class="pair-label">畫面</p><div class="stage"></div></div>
@@ -107,7 +231,7 @@
   </section>
 
   <section class="demo" data-demo>
-    <h2>範例 11-20-D：土地公 <code>type="tudigong"</code></h2>
+    <h2>土地公 <code>type="tudigong"</code></h2>
     <p class="desc">福德祠的廟門打開，土地公從裡面笑咪咪探出來，輕輕點頭、鬍子搖晃、拐杖點地，頭頂噴出元寶。土地公是原創的卡通造型：白鬍子、福帽、龍頭拐杖和元寶。<code>coins</code> 決定元寶的數量。</p>
     <div class="pair">
       <div><p class="pair-label">畫面</p><div class="stage"></div></div>
@@ -124,29 +248,253 @@
     </script>
   </section>
 
-  <section class="demo">
-    <h2>新增的屬性與噴出物</h2>
-    <table class="ref">
-      <tr><th>屬性</th><th>用在</th><th>預設</th><th>說明</th></tr>
-      <tr><td><code>words</code></td><td>book、almanac</td><td>各圖形有預設</td><td>飄出來的文字，用逗號分隔，全形或半形逗號、頓號、空白都可以。</td></tr>
-      <tr><td><code>stamp</code></td><td>almanac、receipt</td><td>宜、中獎</td><td>印章上的字。almanac 一到兩個字最合適；receipt 到四個字。</td></tr>
-      <tr><td><code>cover-text</code></td><td>book、almanac</td><td>book 空白、almanac 農民曆</td><td>封面上的字。book 橫排在封面下方；almanac 由上往下直排，最多五個字。</td></tr>
-      <tr><td><code>digits</code></td><td>receipt</td><td>05687777</td><td>機器顯示的八位數字，不足八位補 0，非數字會被忽略。</td></tr>
-      <tr><td><code>coins</code></td><td>全部</td><td>book 14、almanac 14、receipt 26、tudigong 12</td><td>噴出物的數量，沿用原有的屬性。</td></tr>
-    </table>
-    <p class="desc" style="margin: 16px 0 0 0;">噴出物新增三種：文字（往上飄再慢慢縮小消失，開完之後偶爾還會飄一個）、發票紙片（像彩紙一樣飄落，帶彩色色條）、元寶（像金幣一樣落下並左右翻轉，顏色取 <code>gold</code>）。</p>
+  <h2 class="part">十種圖形與換色</h2>
+
+  <section class="demo full" data-demo>
+    <h2>十四種圖形並排</h2>
+    <p class="desc">按「全部開啟」同時播放；單獨點也可以，開完再點一次會關上。每種圖形都有自己的開啟動作與噴出物，預設值見最下方的表。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<button type="button" class="btn btn-outline-info btn-sm" data-open-all="#all-types treasure-chest">全部開啟</button>
+<div id="all-types" class="group">
+  <figure><treasure-chest type="chest" size="120" replay sparkles="50"><chest-prize>寶箱</chest-prize></treasure-chest><figcaption>chest</figcaption></figure>
+  <figure><treasure-chest type="trophy" size="120" replay sparkles="50"><chest-prize>冠軍</chest-prize></treasure-chest><figcaption>trophy</figcaption></figure>
+  <figure><treasure-chest type="gift" size="120" replay sparkles="50"><chest-prize>驚喜</chest-prize></treasure-chest><figcaption>gift</figcaption></figure>
+  <figure><treasure-chest type="gacha" size="120" replay sparkles="50"><chest-prize>SSR</chest-prize></treasure-chest><figcaption>gacha</figcaption></figure>
+  <figure><treasure-chest type="book" size="120" replay sparkles="50"><chest-prize>學習</chest-prize></treasure-chest><figcaption>book</figcaption></figure>
+  <figure><treasure-chest type="almanac" size="120" replay sparkles="50"><chest-prize>宜</chest-prize></treasure-chest><figcaption>almanac</figcaption></figure>
+  <figure><treasure-chest type="receipt" size="120" replay sparkles="50"><chest-prize>中獎</chest-prize></treasure-chest><figcaption>receipt</figcaption></figure>
+  <figure><treasure-chest type="tudigong" size="120" replay sparkles="50"><chest-prize>平安</chest-prize></treasure-chest><figcaption>tudigong</figcaption></figure>
+  <figure><treasure-chest type="news" size="120" replay sparkles="50"><chest-prize>快報</chest-prize></treasure-chest><figcaption>news</figcaption></figure>
+  <figure><treasure-chest type="curtain" size="120" replay sparkles="50"><chest-prize>開幕</chest-prize></treasure-chest><figcaption>curtain</figcaption></figure>
+  <figure><treasure-chest type="shuttle" size="120" replay><chest-prize>升空</chest-prize></treasure-chest><figcaption>shuttle</figcaption></figure>
+  <figure><treasure-chest type="tram" size="120" replay><chest-prize>到站</chest-prize></treasure-chest><figcaption>tram</figcaption></figure>
+  <figure><treasure-chest type="calendar" size="120" replay date="12-12" tear="3"><chest-prize>考試日</chest-prize></treasure-chest><figcaption>calendar</figcaption></figure>
+  <figure><treasure-chest type="street" size="120" replay><chest-prize>營業中</chest-prize></treasure-chest><figcaption>street</figcaption></figure>
+</div>
+    </script>
   </section>
 
-  <h2 class="version">原有：四種圖形對照</h2>
-  <section class="demo">
-    <h2>chest、trophy、gift、gacha</h2>
-    <p class="desc">這四種沒有變動，放在這裡方便跟新的四種比較。</p>
-    <div class="four">
-      <div><p class="tname"><code>type="chest"</code> 寶箱</p><treasure-chest type="chest" size="150" replay><chest-prize>獎勵</chest-prize></treasure-chest></div>
-      <div><p class="tname"><code>type="trophy"</code> 獎盃</p><treasure-chest type="trophy" size="150" replay><chest-prize>獎勵</chest-prize></treasure-chest></div>
-      <div><p class="tname"><code>type="gift"</code> 禮物盒</p><treasure-chest type="gift" size="150" replay><chest-prize>獎勵</chest-prize></treasure-chest></div>
-      <div><p class="tname"><code>type="gacha"</code> 轉蛋機</p><treasure-chest type="gacha" size="150" replay><chest-prize>獎勵</chest-prize></treasure-chest></div>
+  <section class="demo" data-demo>
+    <h2>用自己的色票換色</h2>
+    <p class="desc">顏色屬性都可以寫色票名稱（key、violet、vanilla…）或色碼，明暗自動計算。<code>chest-color</code> 是主體色，<code>trim-color</code> 是配件色，<code>gold</code>、<code>light</code> 是光芒的主色與最亮的中心色，<code>capsule-color</code> 是轉蛋機掉出來的那顆扭蛋。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
     </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="chest" size="130" replay hint=""
+                chest-color="violet" trim-color="vanilla"
+                gold="dreamy" light="#FBEFFF">
+  <chest-prize>violet</chest-prize>
+</treasure-chest>
+<treasure-chest type="trophy" size="130" replay hint=""
+                chest-color="indigo" trim-color="shell"
+                gold="quiet" light="#F2F5FF" prize-color="shell">
+  <chest-prize>銀盃</chest-prize>
+</treasure-chest>
+<treasure-chest type="gacha" size="130" replay hint=""
+                chest-color="blue" trim-color="salmon"
+                capsule-color="energetic" gold="energetic"
+                light="#F6FFE0" prize-color="energetic">
+  <chest-prize>UR</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <h2 class="part">基本用法</h2>
+
+  <section class="demo" data-demo>
+    <h2>點擊開啟，再點一次重來</h2>
+    <p class="desc"><code>chest-prize</code> 裡寫獎品內容，可以是任何 HTML；不寫就不顯示獎品框。<code>replay</code> 讓已開啟的寶箱再點一次會關上。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest size="240" replay>
+  <chest-prize>Band 7.0 達成！</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>捲動到畫面中自動開啟</h2>
+    <p class="desc"><code>trigger="auto"</code>：寶箱有六成出現在畫面上時，等 <code>delay</code> 毫秒後自動打開。<code>coins="0"</code> 不噴金幣，<code>rays</code> 是光芒條數。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（捲到這裡才會開）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest trigger="auto" delay="500" size="220"
+                chest-color="#33457A" trim-color="#C6C7BD"
+                gold="key" light="#E9FFFC" rays="20" coins="0"
+                prize-color="key">
+  <chest-prize>解鎖：語塊表</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>用程式控制與事件</h2>
+    <p class="desc"><code>trigger="none"</code>：只能用 <code>open()</code> 打開，適合在答題正確、播放到某一步時才開箱。事件會用右上角的 Bootstrap alert 顯示。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<div class="group">
+  <button type="button" class="btn btn-outline-info btn-sm" onclick="document.getElementById('api').open()">open()</button>
+  <button type="button" class="btn btn-outline-info btn-sm" onclick="document.getElementById('api').reset()">reset()</button>
+</div>
+<treasure-chest id="api" trigger="none" size="200"
+                rays="10" sparkles="120" coins="16" ray-speed="25">
+  <chest-prize><span style="font-size:0.8em">全部答對</span><br>+50 XP</chest-prize>
+</treasure-chest>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>放進一般版面</h2>
+    <p class="desc"><code>size</code> 調小就能放進卡片；<code>bg</code> 設成和卡片相同的底色（#141514），光芒的邊緣才會自然融入；<code>hint=""</code> 不顯示提示文字。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<div class="card-in">
+  <treasure-chest size="110" hint="" bg="#141514" sparkles="40" coins="6"></treasure-chest>
+  <div><h3>本課練習完成</h3><p>點一下左邊的寶箱領取獎勵。</p></div>
+</div>
+    </script>
+  </section>
+
+  <section class="demo full" data-demo>
+    <h2>四種搖晃強度</h2>
+    <p class="desc"><code>shake</code> 是 0 到 1 的強度，越大搖得越明顯、時間越長，大於 0.4 時還會往上跳；<code>0</code> 不搖晃直接開。舊寫法 <code>true</code> 等同 0.5、<code>false</code> 等同 0。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<button type="button" class="btn btn-outline-info btn-sm" data-open-all="#shake-row treasure-chest">全部開啟</button>
+<div id="shake-row" class="group">
+  <figure><treasure-chest size="150" shake="0" hint="" replay coins="4" sparkles="50"><chest-prize>0</chest-prize></treasure-chest><figcaption>shake="0"</figcaption></figure>
+  <figure><treasure-chest size="150" shake="0.25" hint="" replay coins="4" sparkles="50"><chest-prize>0.25</chest-prize></treasure-chest><figcaption>shake="0.25"</figcaption></figure>
+  <figure><treasure-chest size="150" hint="" replay coins="4" sparkles="50"><chest-prize>0.5</chest-prize></treasure-chest><figcaption>預設 0.5</figcaption></figure>
+  <figure><treasure-chest size="150" shake="1" hint="" replay coins="4" sparkles="50"><chest-prize>1</chest-prize></treasure-chest><figcaption>shake="1"</figcaption></figure>
+</div>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>動畫完結後顯示與刪除元素</h2>
+    <p class="desc">點禮物盒。完結時「尚未解鎖」被刪除，兩張解鎖卡出現；按 <code>reset()</code> 全部還原。<code>reveal-targets</code>、<code>remove-targets</code> 用逗號分隔，只寫 id 可以省略 #，也可以寫選擇器。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<button type="button" class="btn btn-outline-info btn-sm" onclick="document.getElementById('rv').reset()">reset()</button>
+<treasure-chest id="rv" type="gift" size="170" bg="#121312"
+                reveal-targets="rv-a,rv-b" remove-targets="rv-lock">
+  <chest-prize>測驗滿分</chest-prize>
+</treasure-chest>
+<div id="rv-lock" class="lock">尚未解鎖：拆開禮物後才能看到下一步。</div>
+<div id="rv-a" class="unlock" hidden><b>解鎖 1</b>　Part 2 口說題卡</div>
+<div id="rv-b" class="unlock" style="display:none"><b>解鎖 2</b>　本課語塊表下載</div>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>搭配 link-when：對話播完開寶箱，寶箱開完出現下一課</h2>
+    <p class="desc">按對話的「播放」。寶箱當 target 時 <code>do="play"</code>（預設）會開箱；當 source 時 <code>event="done"</code> 等到開箱動畫完成。<code>link-when.js</code> 與 <code>treasure-chest.js</code> 誰先載入都可以。這個範例要連網載入 ielts repo 的 ui-stream 與 link-when，其他範例離線也能用。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<div class="chain">
+  <ui-stream id="lw-s" controls height="200" avatar-size="34" bubble-width="86">
+    <stream-role name="student" label="Amy" color="violet" initials="A" side="left" data-style="outline"></stream-role>
+    <stream-role name="teacher" label="老師" color="key" initials="T" side="right" data-style="filled"></stream-role>
+    <stream-item from="student">I go to the river every weekend.</stream-item>
+    <stream-item from="teacher" typed>完全正確，every 後面接單數。</stream-item>
+  </ui-stream>
+  <treasure-chest id="lw-c" hidden trigger="none" size="200"><chest-prize>+30 XP</chest-prize></treasure-chest>
+  <div id="lw-msg" class="msg" hidden>獎勵已入帳，下一課：語塊表</div>
+  <link-when source="#lw-s" target="#lw-c" delay="400" enter="pop"></link-when>
+  <link-when source="#lw-c" target="#lw-msg" do="show" delay="300" enter="slide-up"></link-when>
+</div>
+    </script>
+  </section>
+
+  <h2 class="part">各圖形的預設值</h2>
+  <section class="demo">
+    <table class="ref">
+      <tr><th>type</th><th>開啟動作</th><th>噴出物（coins 預設）</th><th>chest-color</th><th>trim-color</th><th>hint</th></tr>
+      <tr><td><code>chest</code>（預設）</td><td>箱蓋往後翻開</td><td>金幣 10</td><td>#8A5530</td><td>#E8B931</td><td>點擊打開</td></tr>
+      <tr><td><code>trophy</code></td><td>杯子往上一頂，杯口亮起，反光掃過</td><td>金幣 8</td><td>#3B2A20</td><td>#E8B931</td><td>點擊領獎</td></tr>
+      <tr><td><code>gift</code></td><td>盒蓋連蝴蝶結彈飛</td><td>彩紙 40</td><td>#EF6661</td><td>#E3D322</td><td>點擊拆開</td></tr>
+      <tr><td><code>gacha</code></td><td>旋鈕轉兩圈，扭蛋飛到正前方裂開</td><td>不噴 0</td><td>#EF6661</td><td>#C6C7BD</td><td>點擊轉一次</td></tr>
+      <tr><td><code>book</code></td><td>封面翻開，書頁翻過去</td><td>文字 14</td><td>#B484E8</td><td>#E3D322</td><td>點擊翻開</td></tr>
+      <tr><td><code>almanac</code></td><td>翻開，蓋上印章</td><td>文字 14</td><td>#EF6661</td><td>#E3D322</td><td>點擊翻開今日</td></tr>
+      <tr><td><code>receipt</code></td><td>號碼滾動，發票吐出，蓋章</td><td>發票紙片 26</td><td>#71CD76</td><td>#C6C7BD</td><td>點擊對獎</td></tr>
+      <tr><td><code>tudigong</code></td><td>廟門打開，土地公探出</td><td>元寶 12</td><td>#EF6661</td><td>#E3D322</td><td>點擊拜拜</td></tr>
+      <tr><td><code>news</code></td><td>警示燈轉動，映像管展開，彩條，NEWS 滑入</td><td>報紙 22</td><td>#778CE1</td><td>#C6C7BD</td><td>點擊收看</td></tr>
+      <tr><td><code>curtain</code></td><td>布幔拉開，匾額彈出</td><td>元寶 16</td><td>#EF6661</td><td>#E3D322</td><td>點擊拉開</td></tr>
+      <tr><td><code>shuttle</code></td><td>太空梭繞地球一圈，文字出現（無光芒）</td><td>不噴 0</td><td>#5DBAE8</td><td>#C6C7BD</td><td>點擊發射</td></tr>
+      <tr><td><code>tram</code></td><td>輕軌從遠到近、轉彎駛來，文字出現（無光芒）</td><td>不噴 0</td><td>#71CD76</td><td>#C6C7BD</td><td>點擊發車</td></tr>
+      <tr><td><code>calendar</code></td><td>日曆一張張撕下，停在指定日期（無光芒）</td><td>不噴 0</td><td>#EF6661</td><td>#E3D322</td><td>點擊撕日曆</td></tr>
+      <tr><td><code>street</code></td><td>45 度俯視的十字路口，超商進出顧客與車流（無光芒）</td><td>不噴 0</td><td>#71CD76</td><td>#C6C7BD</td><td>點擊開始營業</td></tr>
+    </table>
+    <p class="desc" style="margin: 0;">寫錯 <code>type</code> 會在主控台提醒，並改用 <code>chest</code>。</p>
+  </section>
+
+  <h2 class="part">屬性、方法與事件</h2>
+  <section class="demo">
+    <table class="ref">
+      <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+      <tr><td><code>type</code></td><td>chest</td><td>圖形，共十四種，見上表。</td></tr>
+      <tr><td><code>size</code></td><td>220</td><td>圖形寬度（px）。整個舞台約為寬 2.2 倍、高 1.95 倍。</td></tr>
+      <tr><td><code>trigger</code></td><td>click</td><td>click：點擊開啟；auto：捲動到畫面中自動開啟；none：只用 open() 開啟。</td></tr>
+      <tr><td><code>delay</code></td><td>300</td><td>trigger="auto" 時，出現在畫面上之後等幾毫秒再開。</td></tr>
+      <tr><td><code>replay</code></td><td>關</td><td>已開啟後再點一次會關回原狀，可以重來。</td></tr>
+      <tr><td><code>bg</code></td><td>base</td><td>舞台背景色。光芒邊緣會過渡到這個顏色，請設成和放置位置相同的底色。</td></tr>
+      <tr><td><code>gold</code>、<code>light</code></td><td>yellow、#FFF6C8</td><td>光芒的主色與最亮的中心色。</td></tr>
+      <tr><td><code>chest-color</code>、<code>trim-color</code></td><td>依 type</td><td>主體色與配件色，可寫色票名稱或任何 CSS 顏色；明暗自動計算。street 的 chest-color 是超商的招牌與遮陽棚顏色。</td></tr>
+      <tr><td><code>capsule-color</code></td><td>pink</td><td>轉蛋機掉出的扭蛋顏色。</td></tr>
+      <tr><td><code>rays</code></td><td>14（shuttle、tram、calendar、street 為 0）</td><td>光芒條數；0 不畫光芒，只有光暈。shuttle、tram、calendar、street 預設是 0，而且連光暈都沒有。</td></tr>
+      <tr><td><code>ray-speed</code></td><td>10</td><td>光芒旋轉速度（度／秒）。</td></tr>
+      <tr><td><code>sparkles</code></td><td>80（shuttle、tram、calendar、street 為 0）</td><td>開啟瞬間噴出的星光數量。</td></tr>
+      <tr><td><code>coins</code></td><td>依 type</td><td>噴出物數量，0 不噴。噴出物依圖形不同：金幣、彩紙、文字、發票紙片、元寶、報紙。</td></tr>
+      <tr><td><code>ambient</code></td><td>true（shuttle、tram、calendar、street 為 false）</td><td>開啟後開口持續冒出細小星光；寫 false 關閉。</td></tr>
+      <tr><td><code>shake</code></td><td>0.5</td><td>開啟前的搖晃強度，0 到 1；0 直接開啟。</td></tr>
+      <tr><td><code>hint</code></td><td>依 type</td><td>trigger="click" 時圖形下方的提示文字；寫空字串不顯示。</td></tr>
+      <tr><td><code>prize-bg</code>、<code>prize-color</code>、<code>prize-size</code></td><td>base、yellow、1.4rem</td><td>獎品框的底色、文字色、字級（只寫數字視為 rem）。外框用 gold 的顏色。</td></tr>
+      <tr><td><code>words</code></td><td>各圖形有預設</td><td>book、almanac 飄出來的文字，用逗號分隔。</td></tr>
+      <tr><td><code>stamp</code></td><td>宜、中獎</td><td>almanac、receipt 印章上的字。</td></tr>
+      <tr><td><code>cover-text</code></td><td>依 type</td><td>book 封面下方的字；almanac 封面直排的字（預設農民曆，最多五個字）；news 字幕條上的課程標題（選用，太長會跑馬燈）；curtain 匾額上的字（不寫就是一個元寶）。</td></tr>
+      <tr><td><code>date</code></td><td>今天</td><td>calendar 停下來的日期，寫 2026-11-20、11-20 或 20。</td></tr>
+      <tr><td><code>tear</code></td><td>5</td><td>calendar 撕幾張（1 到 12），第一張是 date 往前推這麼多天。</td></tr>
+      <tr><td><code>density</code></td><td>5</td><td>street 的繁忙程度，0 到 10：決定進出超商的顧客數量，也決定四個車道的車流量；0 是空街。</td></tr>
+      <tr><td><code>digits</code></td><td>05687777</td><td>receipt 機器顯示的八位數字。</td></tr>
+      <tr><td><code>reveal-targets</code></td><td>無</td><td>動畫完結後要顯示的元素。</td></tr>
+      <tr><td><code>remove-targets</code></td><td>無</td><td>動畫完結後要從頁面刪除的元素；reset() 會放回原位。</td></tr>
+      <tr><td><code>&lt;chest-prize&gt;</code></td><td>無</td><td>獎品內容，可以寫任何 HTML。</td></tr>
+    </table>
+    <table class="ref">
+      <tr><th>方法與事件</th><th>類型</th><th>說明</th></tr>
+      <tr><td><code>open()</code>、<code>play()</code></td><td>方法</td><td>開啟；已經打開時不作用。play() 給 link-when 的 do="play" 使用。</td></tr>
+      <tr><td><code>reset()</code></td><td>方法</td><td>關回原狀，可以再開一次；同時還原 reveal-targets 與 remove-targets。</td></tr>
+      <tr><td><code>opened</code>、<code>type</code></td><td>唯讀屬性</td><td>動畫是否已完結；目前的圖形名稱。</td></tr>
+      <tr><td><code>treasure-chest:open</code></td><td>事件</td><td>開始開啟。detail：{ type }。</td></tr>
+      <tr><td><code>treasure-chest:opened</code></td><td>事件</td><td>動畫完結。detail：{ type, revealed, removed }。</td></tr>
+      <tr><td><code>treasure-chest:reset</code></td><td>事件</td><td>關回原狀。事件都會冒泡。</td></tr>
+    </table>
   </section>
 </div>
 
@@ -165,7 +513,15 @@
   });
 })();
 
-/* 事件結果用 Bootstrap alert 顯示 */
+/* 「全部開啟」按鈕：data-open-all 寫要一起開的選擇器 */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-open-all]');
+  if (b) document.querySelectorAll(b.dataset.openAll).forEach(c => { c.reset(); c.open(); });
+});
+
+/* 事件結果用 Bootstrap alert 顯示；同一刻的多個事件合併成一則 */
+const pending = {};
+let timer = 0;
 function note(msg) {
   const zone = document.getElementById('alert-zone');
   const box = document.createElement('div');
@@ -176,12 +532,25 @@ function note(msg) {
   zone.appendChild(box);
   setTimeout(() => box.remove(), 3500);
 }
+function queue(name, detail) {
+  (pending[name] = pending[name] || []).push(detail);
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    Object.keys(pending).forEach(k => {
+      const list = pending[k]; delete pending[k];
+      note(list.length > 1 ? k + ' × ' + list.length : k + (list[0] || ''));
+    });
+  }, 200);
+}
+document.addEventListener('treasure-chest:open', e => queue('treasure-chest:open', ' → ' + e.detail.type));
 document.addEventListener('treasure-chest:opened', e => {
   const d = e.detail;
-  note('treasure-chest:opened → ' + d.type + (d.revealed.length ? '，已顯示 ' + d.revealed.length + ' 個元素' : ''));
+  queue('treasure-chest:opened', ' → ' + d.type + (d.revealed.length ? '，已顯示 ' + d.revealed.length + ' 個元素' : ''));
 });
-document.addEventListener('treasure-chest:reset', e => note('treasure-chest:reset → ' + e.target.type));
+document.addEventListener('treasure-chest:reset', e => queue('treasure-chest:reset', ' → ' + e.target.type));
 </script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/flow/ui-stream.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/lw/link-when.js"></script>
 <script src="treasure-chest.js"></script>
 </body>
 </html>

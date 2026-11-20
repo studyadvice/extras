@@ -11,6 +11,8 @@
   const ease = { out: t => 1 - Math.pow(1 - t, 3), back: t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }, inout: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2 };
   const NS = 'http://www.w3.org/2000/svg';
   const esc = v => String(v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  /* 估算文字寬度：全形字算 1 個字級，半形字算 0.6 */
+  const estW = (str, fs) => [...String(str)].reduce((a, ch) => a + (ch.charCodeAt(0) > 255 ? 1 : 0.6) * fs, 0);
   const SANS = "'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif", SERIF = "'Noto Serif TC','Source Han Serif TC','PMingLiU',serif";
   /* 書頁上的文字線條：從 y0 開始，每 10 往下一行，共 n 行 */
   const textLines = (y0, n, col) => `<path d="${Array.from({ length: n }, (_, i) => `M60,${y0 + i * 10} H${[142, 134, 142, 124, 138][i % 5]}`).join(' ')}" stroke="${col}" stroke-width="2.2" stroke-linecap="round" fill="none"/>`;
@@ -123,6 +125,59 @@ treasure-chest .tc-hint.off{display:none;}
       return `<circle cx="107" cy="40" r="11" fill="url(#${id}-t)" stroke="${c.trimInk}" stroke-width="2.4"/><text x="107" y="41" text-anchor="middle" dominant-baseline="central" font-size="14" font-weight="900" fill="${c.mainD}" font-family="${SERIF}">福</text>${ch.map((t, i) => `<text x="107" y="${(y0 + i * step).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${fs}" font-weight="900" fill="url(#${id}-t)" stroke="${c.trimInk}" stroke-width="0.8" font-family="${SERIF}">${esc(t)}</text>`).join('')}<path d="M80,146 H134" stroke="url(#${id}-t)" stroke-width="2.4" stroke-linecap="round"/>`;
     }
   };
+
+  /* ═════════ 場景類共用：有框的小視窗，沒有光芒與星光 ═════════ */
+  const sceneFrame = (c, id) => `
+<rect x="10" y="14" width="180" height="152" rx="14" fill="none" stroke="${c.ink}" stroke-width="8"/>
+<rect x="10" y="14" width="180" height="152" rx="14" fill="none" stroke="url(#${id}-t)" stroke-width="4.4"/>
+${[[20, 24], [180, 24], [20, 156], [180, 156]].map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="2.4" fill="${c.trimD}"/>`).join('')}
+<path d="M24,32 Q26,26 36,25" stroke="${c.trimL}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+
+  /* 輕軌路線（地面座標 X 左右、Z 往遠處）：先直行，再轉 70 度的彎，最後朝鏡頭直直駛來。
+     s 是沿路線走的距離；s 小於 0 往遠處延伸，大於總長往鏡頭延伸 */
+  const TRAM = (() => {
+    const A0 = 200 * Math.PI / 180, L1 = 20, R = 22, L2 = R * 70 * Math.PI / 180, LT = L1 + L2;
+    const raw = s => {
+      if (s <= L1) return [Math.cos(A0) * s, Math.sin(A0) * s, A0];
+      const a = Math.min(s, LT) - L1, al = A0 + a / R;
+      let X = Math.cos(A0) * L1 + R * (Math.sin(al) - Math.sin(A0)), Z = Math.sin(A0) * L1 - R * (Math.cos(al) - Math.cos(A0));
+      if (s > LT) { X += Math.cos(al) * (s - LT); Z += Math.sin(al) * (s - LT); }
+      return [X, Z, al];
+    };
+    const E = raw(LT), ox = -E[0], oz = 7.6 - E[1];
+    /* 投影：鏡頭在原點、高度 6、朝 +Z；F 是焦距，HY 是地平線在畫面上的高度 */
+    const F = 70, HY = 60, HC = 4.3;
+    return {
+      LT, F, HY, HC, A: 4.2, B: 1.25, Y0: 0.3, Y1: 3.3,
+      at: s => { const r = raw(s); return [r[0] + ox, r[1] + oz, r[2]]; },
+      pr: (X, Y, Z) => { const z = Math.max(Z, 1.5); return [100 + F * X / z, HY + F * (HC - Y) / z]; }
+    };
+  })();
+  const poly = pts => 'M' + pts.map(p => p[0].toFixed(2) + ',' + p[1].toFixed(2)).join(' L') + ' Z';
+
+  /* ═════════ 街道場景用：2:1 等角投影（約 45 度俯視）與角色圖 ═════════
+     世界座標 x 往右下、y 往左下、z 往上；x + y 越大離鏡頭越近 */
+  const iso = (x, y, z = 0) => [100 + (x - y), 98 + (x + y) / 2 - z];
+  const isoL = (x, y, z) => [x - y, (x + y) / 2 - z];
+  /* 汽車：一個車身方塊加一個車窗方塊。ax 是行進軸（x 或 y），dir 是方向，看得見的那一端：往前開是車頭燈，往後開是車尾燈 */
+  const carSVG = (ax, dir, col, ink) => {
+    const L = 10, W = 5, lx = ax === 'x' ? L : W, ly = ax === 'x' ? W : L, H = 3.4, win = mix(PALETTE.indigo, '#000000', 0.5);
+    const box = (x0, y0, x1, y1, z0, z1, cT, cR, cL) => `<path d="${poly([isoL(x1, y0, z0), isoL(x1, y1, z0), isoL(x1, y1, z1), isoL(x1, y0, z1)])}" fill="${cR}"/><path d="${poly([isoL(x0, y1, z0), isoL(x1, y1, z0), isoL(x1, y1, z1), isoL(x0, y1, z1)])}" fill="${cL}"/><path d="${poly([isoL(x0, y0, z1), isoL(x1, y0, z1), isoL(x1, y1, z1), isoL(x0, y1, z1)])}" fill="${cT}"/>`;
+    const off = -dir * 0.8, cx0 = ax === 'x' ? off - 2.5 : -lx / 2 + 0.7, cx1 = ax === 'x' ? off + 2.5 : lx / 2 - 0.7, cy0 = ax === 'x' ? -ly / 2 + 0.7 : off - 2.5, cy1 = ax === 'x' ? ly / 2 - 0.7 : off + 2.5;
+    const lc = dir > 0 ? PALETTE.yellow : PALETTE.red, lamp = yc => ax === 'x'
+      ? `<path d="${poly([isoL(lx / 2, yc - 0.6, 1.3), isoL(lx / 2, yc + 0.6, 1.3), isoL(lx / 2, yc + 0.6, 2.4), isoL(lx / 2, yc - 0.6, 2.4)])}" fill="${lc}" stroke="none"/>`
+      : `<path d="${poly([isoL(yc - 0.6, ly / 2, 1.3), isoL(yc + 0.6, ly / 2, 1.3), isoL(yc + 0.6, ly / 2, 2.4), isoL(yc - 0.6, ly / 2, 2.4)])}" fill="${lc}" stroke="none"/>`;
+    const sh = [[-lx / 2 + 0.8, -ly / 2 + 0.8], [lx / 2 + 0.8, -ly / 2 + 0.8], [lx / 2 + 0.8, ly / 2 + 0.8], [-lx / 2 + 0.8, ly / 2 + 0.8]].map(q => isoL(q[0], q[1], 0));
+    return `<g stroke="${ink}" stroke-width="0.5" stroke-linejoin="round"><path d="${poly(sh)}" fill="${mix(PALETTE.gray, '#000000', 0.28)}" stroke="none"/>`
+      + box(-lx / 2, -ly / 2, lx / 2, ly / 2, 0.6, H, col, mix(col, '#000000', 0.7), mix(col, '#000000', 0.55))
+      + lamp(-(ax === 'x' ? ly : lx) * 0.28) + lamp((ax === 'x' ? ly : lx) * 0.28)
+      + box(cx0, cy0, cx1, cy1, H, H + 2.6, mix(col, '#FFFFFF', 0.85), win, mix(win, '#000000', 0.7)) + '</g>';
+  };
+  /* 行人：腳下是原點。離開的人手上拎著商品袋 */
+  const pedSVG = (shirt, skin, bag, ink, bagCol) => `<g stroke="${ink}" stroke-width="0.4" stroke-linejoin="round"><ellipse cx="0" cy="0" rx="2.6" ry="1.1" fill="${mix(PALETTE.gray, '#000000', 0.28)}" stroke="none"/>
+<rect x="-1.5" y="-2.4" width="1.3" height="2.4" fill="#0C0D0C"/><rect x="0.2" y="-2.4" width="1.3" height="2.4" fill="#0C0D0C"/>
+<rect x="-1.9" y="-6.6" width="3.8" height="4.6" rx="1.2" fill="${shirt}"/>
+<circle cx="0" cy="-8.4" r="2" fill="${skin}"/>${bag ? `<rect x="1.9" y="-4.8" width="2.2" height="2.8" rx="0.4" fill="${bagCol}"/>` : ''}</g>`;
 
   /* ═════════ 八種圖形：預設色、SVG、開啟動作、光芒出口 ═════════
      座標：viewBox 0 -60 200 230，寬 200，底部在 y=166。
@@ -465,6 +520,510 @@ ${digits}
         r.glow.setAttribute('fill', u >= this.burst ? `url(#${r.gid})` : c.mainD);
         return { squash: u >= 0.62 && u < 0.72 ? 0.03 : 0 };
       }
+    },
+
+    /* ── 新聞快報：老電視頂上的警示燈轉起來，螢幕像映像管一樣展開，彩條之後切到新聞畫面，NEWS 條從左邊滑入 ── */
+    news: {
+      main: '#778CE1', trim: '#C6C7BD', items: 'news', count: 22, hint: '點擊收看', burst: 0.9, cover: '',
+      svg(o, c, id) {
+        const ink = c.ink, red = PALETTE.urgent, navy = mix(PALETTE.indigo, '#000000', 0.28), sea = mix(PALETTE.indigo, '#000000', 0.5), txt = String(o.cover || '').trim();
+        const bars = ['shell', 'yellow', 'key', 'green', 'pink', 'red', 'blue'].map(n => PALETTE[n]);
+        const scan = Array.from({ length: 14 }, (_, i) => `M30,${64 + i * 6} H134`).join(' ');
+        const barRects = bars.map((col, i) => `<rect x="${(30 + i * 104 / 7).toFixed(2)}" y="60" width="${(104 / 7 + 0.4).toFixed(2)}" height="56" fill="${col}"/>`).join('');
+        const lat = [-10, 0, 10].map(d => { const w = Math.sqrt(400 - d * d); return `M${(82 - w).toFixed(1)},${82 + d} H${(82 + w).toFixed(1)}`; }).join(' ');
+        const scroll = estW(txt, 11) > 96;
+        const tick = txt
+          ? `<g clip-path="url(#${id}-tc)"><text class="tc-t1" x="${scroll ? 134 : 82}" y="133" text-anchor="${scroll ? 'start' : 'middle'}" dominant-baseline="central" font-size="11" font-weight="700" fill="${PALETTE.vanilla}" font-family="${SANS}">${esc(txt)}</text><text class="tc-t2" x="134" y="133" dominant-baseline="central" font-size="11" font-weight="700" fill="${PALETTE.vanilla}" font-family="${SANS}" style="display:${scroll ? '' : 'none'}">${esc(txt)}</text></g>`
+          : `<path d="M38,133 h22 M66,133 h14 M86,133 h30" stroke="${PALETTE.gray}" stroke-width="3.4" stroke-linecap="round"/>`;
+        return `
+<defs><clipPath id="${id}-sc"><rect x="30" y="60" width="104" height="82" rx="7"/></clipPath><clipPath id="${id}-tc"><rect x="30" y="124" width="104" height="18"/></clipPath></defs>
+<g class="tc-bm" style="display:none"><path d="M100,35 L146,21 L146,49 Z" fill="${red}" stroke="${ink}" stroke-width="2.4" stroke-linejoin="round"/></g>
+<path d="M78,46 L48,8 M122,46 L152,8" stroke="${ink}" stroke-width="7.5" stroke-linecap="round"/>
+<path d="M78,46 L48,8 M122,46 L152,8" stroke="url(#${id}-t)" stroke-width="4" stroke-linecap="round"/>
+<circle cx="48" cy="8" r="4.6" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.4"/><circle cx="152" cy="8" r="4.6" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.4"/>
+<rect x="24" y="154" width="22" height="12" rx="3" fill="${c.mainD}" stroke="${ink}" stroke-width="3"/><rect x="154" y="154" width="22" height="12" rx="3" fill="${c.mainD}" stroke="${ink}" stroke-width="3"/>
+<rect x="14" y="44" width="172" height="114" rx="16" fill="url(#${id}-m)" stroke="${ink}" stroke-width="3.5"/>
+<path d="M20,64 V134" stroke="${c.mainL}" stroke-width="4" stroke-linecap="round"/>
+<rect x="26" y="56" width="112" height="90" rx="10" fill="${ink}" stroke="url(#${id}-t)" stroke-width="3"/>
+<g clip-path="url(#${id}-sc)">
+  <g class="tc-s0"><rect x="30" y="60" width="104" height="82" fill="${ink}"/><path d="${scan}" stroke="${mix(ink, '#FFFFFF', 0.88)}" stroke-width="1"/></g>
+  <g class="tc-s1" style="display:none"><rect class="tc-wh" x="30" y="60" width="104" height="82" fill="#F4F3EC"/></g>
+  <g class="tc-s2" style="display:none">${barRects}<rect x="30" y="116" width="104" height="26" fill="${ink}"/><path d="M38,129 H66 M74,129 H96 M104,129 H126" stroke="${PALETTE.shell}" stroke-width="5" stroke-linecap="round"/><rect class="tc-gl" x="30" y="60" width="104" height="5" fill="#F4F3EC"/></g>
+  <g class="tc-s3" style="display:none">
+    <rect x="30" y="60" width="104" height="82" fill="${navy}"/>
+    <circle cx="82" cy="82" r="20" fill="${sea}" stroke="${PALETTE.key}" stroke-width="2"/>
+    <path d="${lat}" stroke="${PALETTE.key}" stroke-width="1.4" fill="none"/>
+    ${[0, 1, 2].map(() => `<ellipse class="tc-mr" cx="82" cy="82" rx="10" ry="20" fill="none" stroke="${PALETTE.key}" stroke-width="1.4"/>`).join('')}
+    <circle class="tc-dot" cx="122" cy="68" r="3.6" fill="${red}"/>
+    <g class="tc-bn"><path d="M30,102 H112 L122,112 L112,122 H30 Z" fill="${red}"/><text x="38" y="112.5" dominant-baseline="central" font-size="13" font-weight="900" letter-spacing="1.5" fill="#F4F3EC" font-family="${SANS}">NEWS</text></g>
+    <g class="tc-tk"><rect x="30" y="122" width="104" height="20" fill="${ink}"/><rect x="30" y="122" width="104" height="2" fill="${PALETTE.yellow}"/>${tick}</g>
+    <rect class="tc-fl" x="30" y="60" width="104" height="82" fill="#F4F3EC" style="display:none"/>
+  </g>
+</g>
+<path d="M36,66 Q44,62 62,62" stroke="${c.trimL}" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+<circle cx="161" cy="76" r="9" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.6"/><path d="M161,76 L166,70" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="161" cy="102" r="9" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.6"/><path d="M161,102 L156,97" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M150,122 H174 M150,129 H174 M150,136 H174 M150,143 H174" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>
+<rect x="82" y="40" width="36" height="8" rx="3" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.6"/>
+<path class="tc-bulb" d="M88,41 A12,12 0 0 1 112,41 Z" fill="${c.mainD}" stroke="${ink}" stroke-width="2.6" stroke-linejoin="round"/>
+<path d="M92,37 Q95,32 100,31" stroke="${c.trimL}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+      },
+      refs(s) {
+        const g = q => s.querySelector(q);
+        return { bm: g('.tc-bm'), bulb: g('.tc-bulb'), s: [g('.tc-s0'), g('.tc-s1'), g('.tc-s2'), g('.tc-s3')], wh: g('.tc-wh'), gl: g('.tc-gl'), mr: [...s.querySelectorAll('.tc-mr')], dot: g('.tc-dot'), bn: g('.tc-bn'), tk: g('.tc-tk'), fl: g('.tc-fl'), t1: g('.tc-t1'), t2: g('.tc-t2') };
+      },
+      mouth() { return [100, 78]; },
+      pose(r, u, rattle, o, c) {
+        const on = u >= 0;
+        /* 警示燈：開啟後亮起，光束像燈塔一樣轉動（光束寬度隨 cos 變化，過 0 就換邊） */
+        r.bulb.setAttribute('fill', on ? PALETTE.urgent : c.mainD);
+        r.bm.style.display = on ? '' : 'none';
+        if (on) r.bm.setAttribute('transform', `translate(100 35) scale(${Math.cos(u * 8).toFixed(3)} 1) translate(-100 -35)`);
+        /* 螢幕：待機黑屏 → 映像管展開（白線拉開）→ 彩條 → 新聞畫面 */
+        const ph = u < 0 ? 0 : u < 0.22 ? 1 : u < 0.6 ? 2 : 3;
+        r.s.forEach((g, i) => { g.style.display = i === ph ? '' : 'none'; });
+        if (ph === 1) {
+          const a = clamp(u / 0.08, 0, 1), b = clamp((u - 0.08) / 0.14, 0, 1);
+          r.wh.setAttribute('transform', `translate(82 101) scale(${(0.12 + 0.88 * ease.out(a)).toFixed(3)} ${(0.03 + 0.97 * ease.out(b)).toFixed(3)}) translate(-82 -101)`);
+        } else if (ph === 2) {
+          r.s[2].setAttribute('transform', `translate(${(Math.sin(u * 90) * (u < 0.3 ? 2.5 : 0.8)).toFixed(2)} 0)`);
+          r.gl.setAttribute('y', (60 + (u * 170) % 82).toFixed(1));
+        } else if (ph === 3) {
+          const t = u - 0.6, bp = clamp(t / 0.3, 0, 1), tp = clamp((t - 0.15) / 0.25, 0, 1);
+          r.bn.setAttribute('transform', `translate(${(-100 * (1 - ease.back(bp))).toFixed(2)} 0)`);
+          r.tk.setAttribute('transform', `translate(0 ${(20 * (1 - ease.out(tp))).toFixed(2)})`);
+          r.mr.forEach((e, i) => e.setAttribute('rx', Math.max(0.6, Math.abs(Math.cos(t * 1.3 + i * Math.PI / 3)) * 20).toFixed(2)));
+          r.dot.style.display = Math.floor(u * 2) % 2 ? 'none' : '';
+          const v = u - this.burst; r.fl.style.display = v >= 0 && v < 0.07 ? '' : 'none';
+          /* 跑馬燈：文字比字幕條長才捲動，兩份首尾相接 */
+          const txt = String(o.cover || '').trim(), tw = estW(txt, 11);
+          if (txt && tw > 96) { const off = (t * 30) % (tw + 30); r.t1.setAttribute('x', (134 - off).toFixed(1)); r.t2.setAttribute('x', (134 - off + tw + 30).toFixed(1)); }
+        }
+        const v2 = u - this.burst;
+        return { squash: u < 0 ? 0 : v2 > -0.02 && v2 < 0.1 ? 0.04 * (1 - (v2 + 0.02) / 0.12) : 0 };
+      }
+    },
+
+    /* ── 拉布幕：兩側紅布幔往外拉開，匾額彈出，元寶噴出。匾額文字用 cover-text 設定，沒寫就是一個元寶 ── */
+    curtain: {
+      main: '#EF6661', trim: '#E3D322', items: 'ingot', count: 16, hint: '點擊拉開', burst: 0.62, cover: '',
+      svg(o, c, id) {
+        const ink = c.ink, txt = String(o.cover || '').trim(), ch = [...txt], n = ch.length;
+        const total = estW(txt, 1), words = txt.split(/\s+/);
+        let lines = [txt];
+        if (total > 7) {
+          /* 太長就拆成兩行：有空白的英文在最接近中間的空白拆，其他在字數一半拆 */
+          if (words.length > 1) { let best = 1, bd = 1e9; for (let i = 1; i < words.length; i++) { const d = Math.abs(estW(words.slice(0, i).join(' '), 1) - total / 2); if (d < bd) { bd = d; best = i; } } lines = [words.slice(0, best).join(' '), words.slice(best).join(' ')]; }
+          else { const half = Math.ceil(n / 2); lines = [ch.slice(0, half).join(''), ch.slice(half).join('')]; }
+        }
+        const two = lines.length > 1, fs = n ? Math.min(two ? 17 : 30, 92 / Math.max(...lines.map(l => estW(l, 1)))) : 0, ys = two ? [79, 96] : [87];
+        const drape = x => `<rect x="${x}" y="40" width="66" height="116" fill="url(#${id}-m)" stroke="${ink}" stroke-width="3"/>${[1, 2, 3, 4, 5].map(i => `<path d="M${x + i * 11},42 Q${x + i * 11 + (i % 2 ? 4 : -4)},100 ${x + i * 11},152" fill="none" stroke="${c.mainD}" stroke-width="2.2"/>`).join('')}<rect x="${x}" y="146" width="66" height="10" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.4"/>`;
+        let arcs = 'M178,48'; for (let i = 0; i < 6; i++) arcs += ` Q${178 - 26 * i - 13},66 ${178 - 26 * (i + 1)},48`;
+        const tassel = [1, 2, 3, 4, 5].map(i => { const x = 178 - 26 * i; return `<path d="M${x},50 V60" stroke="${o.trim}" stroke-width="2.4" stroke-linecap="round"/><circle cx="${x}" cy="48" r="3.2" fill="url(#${id}-t)" stroke="${ink}" stroke-width="1.8"/>`; }).join('');
+        const text = n ? lines.map((l, i) => `<text x="100" y="${ys[i]}" text-anchor="middle" dominant-baseline="central" font-size="${fs.toFixed(1)}" font-weight="900" fill="url(#${id}-t)" stroke="${c.trimInk}" stroke-width="0.8" font-family="${SERIF}">${esc(l)}</text>`).join('') : `<path d="${ingotPath(100, 87, 15)}" fill="url(#${id}-t)" stroke="${c.trimInk}" stroke-width="2.4" stroke-linejoin="round"/>`;
+        const pile = [[80, 146], [120, 146], [100, 128]].map(p => `<path d="${ingotPath(p[0], p[1], 11)}" fill="url(#${id}-t)" stroke="${c.trimInk}" stroke-width="2.2" stroke-linejoin="round"/>`).join('');
+        return `
+<defs>
+  <radialGradient id="${id}-g" cx="0.5" cy="0.55" r="0.65"><stop offset="0" stop-color="${o.light}"/><stop offset="1" stop-color="${mix(o.gold, '#000000', 0.6)}"/></radialGradient>
+  <clipPath id="${id}-pc"><rect x="46" y="64" width="108" height="44" rx="4"/></clipPath>
+</defs>
+<rect class="tc-glow" x="34" y="40" width="132" height="116" fill="${c.mainD}"/>
+<path d="M70,50 V64 M130,50 V64" stroke="${o.trim}" stroke-width="2.4"/>
+<g class="tc-pile">${pile}</g>
+<g class="tc-pl">
+  <rect x="46" y="64" width="108" height="44" rx="4" fill="url(#${id}-m)" stroke="url(#${id}-t)" stroke-width="4"/>
+  <rect x="52" y="70" width="96" height="32" rx="2" fill="none" stroke="${c.trimL}" stroke-width="1.4"/>
+  ${text}
+  <g clip-path="url(#${id}-pc)"><rect class="tc-sn" x="-80" y="60" width="14" height="52" fill="${mix(o.trim, '#FFFFFF', 0.35)}" transform="skewX(-22)"/></g>
+</g>
+<g class="tc-dl">${drape(34)}</g>
+<g class="tc-dr">${drape(100)}</g>
+<rect x="22" y="32" width="12" height="124" fill="url(#${id}-t)" stroke="${ink}" stroke-width="3"/>
+<rect x="166" y="32" width="12" height="124" fill="url(#${id}-t)" stroke="${ink}" stroke-width="3"/>
+<path d="M22,30 H178 V48 ${arcs.slice(8)} Z" fill="url(#${id}-m)" stroke="${ink}" stroke-width="3" stroke-linejoin="round"/>
+<path d="${arcs}" fill="none" stroke="url(#${id}-t)" stroke-width="2.4"/>
+${tassel}
+<rect x="16" y="24" width="168" height="8" rx="4" fill="url(#${id}-t)" stroke="${ink}" stroke-width="3"/>
+<circle cx="16" cy="28" r="7" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.6"/><circle cx="184" cy="28" r="7" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.6"/>
+<path d="${ingotPath(100, 14, 9)}" fill="url(#${id}-t)" stroke="${c.trimInk}" stroke-width="2.2" stroke-linejoin="round"/>
+<rect x="12" y="156" width="176" height="10" rx="3" fill="#86877F" stroke="${ink}" stroke-width="3"/>`;
+      },
+      refs(s) {
+        const g = q => s.querySelector(q);
+        return { dl: g('.tc-dl'), dr: g('.tc-dr'), pl: g('.tc-pl'), pile: g('.tc-pile'), sn: g('.tc-sn'), glow: g('.tc-glow'), gid: s.querySelector('radialGradient').id };
+      },
+      mouth() { return [100, 66]; },
+      pose(r, u, rattle, o, c) {
+        /* 布幔：搖晃時微微抖動；開啟後 0.62 秒往兩側拉開，聚成窄窄一條 */
+        const e = u < 0 ? 0 : ease.inout(clamp((u - 0.04) / 0.62, 0, 1)), k = u < 0 ? 1 - 0.05 * rattle : 1 - 0.8 * e;
+        r.dl.setAttribute('transform', `translate(34 0) scale(${k.toFixed(3)} 1) translate(-34 0)`);
+        r.dr.setAttribute('transform', `translate(166 0) scale(${k.toFixed(3)} 1) translate(-166 0)`);
+        /* 匾額：布幔拉到一半時彈出 */
+        const pp = u < 0.2 ? 0 : clamp((u - 0.2) / 0.5, 0, 1);
+        r.pl.setAttribute('transform', `translate(100 86) scale(${(0.86 + 0.14 * ease.back(pp)).toFixed(3)}) translate(-100 -86)`);
+        const t2 = Math.max(0, u - 0.7), bob = u > 0.7 ? Math.sin(t2 * 6) * 1.2 * Math.min(1, t2 * 3) : 0;
+        r.pile.setAttribute('transform', `translate(0 ${bob.toFixed(2)})`);
+        /* 反光：每 2.8 秒掃過匾額 */
+        const g = u < 0.9 ? -1 : ((u - 0.9) % 2.8) / 0.9;
+        r.sn.setAttribute('x', g < 0 || g > 1 ? -80 : 40 + 170 * ease.inout(g));
+        r.glow.setAttribute('fill', u >= this.burst ? `url(#${r.gid})` : c.mainD);
+        const v2 = u - this.burst;
+        return { squash: u < 0 ? 0 : v2 > -0.02 && v2 < 0.1 ? 0.035 * (1 - (v2 + 0.02) / 0.12) : 0 };
+      }
+    },
+
+    /* ── 太空梭：太空梭繞地球飛一圈（繞到地球後面會被擋住），回到起點之後文字出現。沒有光芒與星光 ── */
+    shuttle: {
+      main: '#5DBAE8', trim: '#C6C7BD', items: 'coin', count: 0, plain: true, hint: '點擊發射', burst: 2.7, tail: 0.7, pd: 0, lift: [0, 0.1], cover: '',
+      svg(o, c, id) {
+        const ink = c.ink, W = '#F4F3EC', space = mix(o.main, '#000000', 0.1), green = PALETTE.green;
+        const stars = [[26, 34, 1.3], [48, 27, 0.9], [72, 36, 1.1], [132, 28, 1.2], [152, 34, 0.9], [172, 42, 1.4], [30, 72, 1], [170, 76, 1], [22, 108, 1.2], [178, 112, 1], [40, 150, 1], [160, 150, 1.2], [112, 154, 0.9], [24, 140, 0.9], [182, 140, 0.9]]
+          .map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${p[2]}" fill="${i % 4 === 0 ? PALETTE.yellow : PALETTE.shell}"/>`).join('');
+        const land = `<path d="M70,82 Q80,74 92,80 Q98,88 90,96 Q82,94 74,100 Q66,94 70,82 Z M106,108 Q118,102 128,110 Q132,120 122,128 Q112,124 106,108 Z M128,80 Q138,78 142,86 Q138,94 130,90 Z" fill="${green}" stroke="${mix(green, '#000000', 0.55)}" stroke-width="1.4" stroke-linejoin="round"/>`;
+        const cloud = `<path d="M64,92 Q72,88 84,92 M96,76 Q108,72 120,77 M108,122 Q116,118 130,122" stroke="${PALETTE.shell}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+        return `
+<defs><clipPath id="${id}-pn"><rect x="14" y="18" width="172" height="144" rx="11"/></clipPath><clipPath id="${id}-ec"><circle cx="100" cy="100" r="38"/></clipPath></defs>
+<g clip-path="url(#${id}-pn)">
+  <rect x="14" y="18" width="172" height="144" fill="${space}"/>
+  ${stars}
+  <g class="tc-bk" transform="translate(100 100) rotate(-14)"><path d="M-70,0 A70,20 0 0 1 70,0" fill="none" stroke="${PALETTE.gray}" stroke-width="1.4" stroke-dasharray="4 4"/>
+    <g class="tc-sh">
+      <g class="tc-fl"><path d="M-19,-2 L-28,0 L-19,2 Z" fill="${PALETTE.playful}" stroke="${ink}" stroke-width="1"/></g>
+      <path d="M-12,-3.5 L-17,-13 L-6,-3.5 Z" fill="${W}" stroke="${ink}" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M-16,2 L4,2 L-8,10.5 L-16,6 Z" fill="${W}" stroke="${ink}" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M-19,-4 L8,-4 Q17,-3.6 19.5,0 Q17,3.6 8,4 L-19,4 Z" fill="${W}" stroke="${ink}" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M-19,2 L9,2 Q16,2.4 19,0.6 Q17,3.6 8,4 L-19,4 Z" fill="${ink}"/>
+      <path d="M9,-3.2 L13.5,-3 Q16,-2 16.6,-0.8 L9,-0.8 Z" fill="${mix(PALETTE.indigo, '#000000', 0.45)}"/>
+      <rect x="-12" y="-4" width="3.2" height="3" fill="${PALETTE.red}"/>
+      <rect x="-22" y="-2.6" width="3.4" height="5.2" rx="1" fill="${ink}"/>
+    </g>
+  </g>
+  <circle cx="100" cy="100" r="38" fill="${o.main}"/>
+  <g clip-path="url(#${id}-ec)">
+    <g class="tc-land">${land}<g transform="translate(84 0)">${land}</g></g>
+    <g class="tc-cld">${cloud}<g transform="translate(84 0)">${cloud}</g></g>
+    <circle cx="118" cy="112" r="44" fill="none" stroke="${c.mainD}" stroke-width="24"/>
+  </g>
+  <circle cx="100" cy="100" r="38" fill="none" stroke="${ink}" stroke-width="2.4"/>
+  <path d="M75,86 Q80,74 94,69" stroke="${PALETTE.shell}" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <g class="tc-ft" transform="translate(100 100) rotate(-14)"><path d="M70,0 A70,20 0 0 1 -70,0" fill="none" stroke="${PALETTE.gray}" stroke-width="1.4" stroke-dasharray="4 4"/></g>
+</g>${sceneFrame(c, id)}`;
+      },
+      refs(s) {
+        const g = q => s.querySelector(q);
+        return { bk: g('.tc-bk'), ft: g('.tc-ft'), sh: g('.tc-sh'), fl: g('.tc-fl'), land: g('.tc-land'), cld: g('.tc-cld') };
+      },
+      mouth() { return [100, 76]; },
+      pose(r, u) {
+        /* 繞一圈：起點在左下，沿傾斜的橢圓軌道走完整一圈，頭尾慢、中間快 */
+        const T0 = this.burst, p = u < 0 ? 0 : ease.inout(clamp(u / T0, 0, 1)), th = 2.6 - 2 * Math.PI * p;
+        const rx = 70, ry = 20, x = rx * Math.cos(th), y = ry * Math.sin(th) + (u < 0 ? Math.sin(performance.now() / 500) * 0.8 : 0);
+        const ang = Math.atan2(-ry * Math.cos(th), rx * Math.sin(th)) * 180 / Math.PI, sc = 0.9 * (1 + 0.22 * Math.sin(th));
+        r.sh.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${ang.toFixed(1)}) scale(${sc.toFixed(3)})`);
+        /* 在地球前面（橢圓下半）就放到前景，在後面就放回地球後方 */
+        const grp = Math.sin(th) > 0 ? r.ft : r.bk;
+        if (r.sh.parentNode !== grp) grp.appendChild(r.sh);
+        const burning = u > 0.12 && u < T0 - 0.15;
+        r.fl.style.display = burning ? '' : 'none';
+        if (burning) r.fl.setAttribute('transform', `translate(-19 0) scale(${(0.75 + 0.45 * Math.abs(Math.sin(u * 45))).toFixed(2)} 1) translate(19 0)`);
+        /* 地球自轉：陸地與雲以不同速度往左移，兩份首尾相接 */
+        const t = Math.max(0, u);
+        r.land.setAttribute('transform', `translate(${(-(t * 7) % 84).toFixed(2)} 0)`);
+        r.cld.setAttribute('transform', `translate(${(-(t * 12) % 84).toFixed(2)} 0)`);
+        return { squash: 0 };
+      }
+    },
+
+    /* ── 輕軌：車廂從遠方駛來，先直行，再轉彎，朝鏡頭駛到跟前停下，文字出現。沒有光芒與星光 ──
+       鏡頭是真的透視投影：車廂是一個長方體，每一幀依路線上的位置與方向重新算出看得見的面（車頭、側面、車頂） */
+    tram: {
+      main: '#71CD76', trim: '#C6C7BD', items: 'coin', count: 0, plain: true, hint: '點擊發車', burst: 3.2, tail: 0.7, pd: 0, lift: [0, 0.1], cover: '',
+      svg(o, c, id) {
+        const T = TRAM, ink = c.ink, pr = T.pr, ground = mix(PALETTE.green, '#000000', 0.38), bed = mix(PALETTE.gray, '#000000', 0.55);
+        const strip = (s0, s1, step, lat0, lat1) => {
+          const L = [], Rr = [];
+          for (let s = s0; s <= s1 + 1e-6; s += step) { const [X, Z, al] = T.at(s), lx = -Math.sin(al), lz = Math.cos(al); L.push(pr(X + lx * lat0, 0, Z + lz * lat0)); Rr.push(pr(X + lx * lat1, 0, Z + lz * lat1)); }
+          return poly(L.concat(Rr.reverse()));
+        };
+        let ties = '';
+        for (let s = -40; s <= T.LT + 8; s += 1.4) { const [X, Z, al] = T.at(s), fx = Math.cos(al), fz = Math.sin(al), lx = -fz, lz = fx; ties += poly([[-1, -0.13], [1, -0.13], [1, 0.13], [-1, 0.13]].map(q => pr(X + lx * q[0] * 1.15 + fx * q[1], 0, Z + lz * q[0] * 1.15 + fz * q[1]))); }
+        const rails = [-0.72, 0.72].map(g => strip(-40, T.LT + 8, 0.7, g - 0.1, g + 0.1)).join(' ');
+        const city = [[18, 14, 12, 'calm'], [32, 20, 9, 'quiet'], [41, 10, 11, 'calm'], [52, 16, 8, 'quiet'], [60, 8, 10, 'calm'], [112, 12, 9, 'quiet'], [121, 22, 10, 'calm'], [131, 15, 8, 'quiet'], [139, 10, 12, 'calm'], [151, 19, 9, 'quiet'], [160, 12, 11, 'calm'], [171, 17, 10, 'quiet']]
+          .map(b => `<rect x="${b[0]}" y="${T.HY - b[1]}" width="${b[2]}" height="${b[1]}" fill="${PALETTE[b[3]]}" stroke="${ink}" stroke-width="1"/>`).join('');
+        const trees = [24, 70, 82, 96, 148, 166, 178].map((x, i) => `<circle cx="${x}" cy="${T.HY - 2}" r="${4 + (i % 3)}" fill="${mix(PALETTE.green, '#000000', 0.7)}" stroke="${ink}" stroke-width="1"/>`).join('');
+        return `
+<defs>
+  <clipPath id="${id}-pn"><rect x="14" y="18" width="172" height="144" rx="11"/></clipPath>
+  <linearGradient id="${id}-sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mix(PALETTE.blue, '#FFFFFF', 0.55)}"/><stop offset="1" stop-color="${mix(PALETTE.blue, '#FFFFFF', 0.82)}"/></linearGradient>
+</defs>
+<g clip-path="url(#${id}-pn)">
+  <rect x="14" y="18" width="172" height="${T.HY - 18}" fill="url(#${id}-sk)"/>
+  <ellipse cx="58" cy="30" rx="16" ry="4.4" fill="#F4F3EC"/><ellipse cx="146" cy="38" rx="20" ry="5" fill="#F4F3EC"/>
+  ${city}${trees}
+  <rect x="14" y="${T.HY}" width="172" height="${162 - T.HY}" fill="${ground}"/>
+  <path d="${strip(-40, T.LT + 8, 0.7, -1.6, 1.6)}" fill="${bed}"/>
+  <path d="${ties}" fill="${PALETTE['bg-alternative']}"/>
+  <path d="${rails}" fill="${PALETTE.shell}" stroke="${ink}" stroke-width="0.3"/>
+  <g class="tc-car" stroke="${ink}" stroke-linejoin="round" stroke-width="0.8">
+    <path class="tc-cs" fill="${mix(ground, '#000000', 0.45)}" stroke="none"/>
+    <path class="tc-sd" fill="${mix('#F4F3EC', '#000000', 0.78)}"/><path class="tc-sdw" fill="${mix(PALETTE.indigo, '#000000', 0.45)}" stroke="none"/><path class="tc-sds" fill="${o.main}" stroke="none"/><path class="tc-sdk" fill="${ink}" stroke="none"/>
+    <path class="tc-fr" fill="#F4F3EC"/><path class="tc-frs" fill="${o.main}" stroke="none"/><path class="tc-frw" fill="${mix(PALETTE.indigo, '#000000', 0.45)}" stroke="none"/><path class="tc-frl" fill="${PALETTE.yellow}" stroke="none"/><path class="tc-frk" fill="${ink}" stroke="none"/><path class="tc-frg" fill="${PALETTE.red}" stroke="none"/>
+    <path class="tc-rf" fill="${mix(o.trim, '#FFFFFF', 0.7)}"/><path class="tc-rfl" fill="${mix(o.trim, '#000000', 0.55)}" stroke="none"/>
+  </g>
+</g>${sceneFrame(c, id)}`;
+      },
+      refs(s) {
+        const g = q => s.querySelector(q), n = {};
+        ['cs', 'sd', 'sdw', 'sds', 'sdk', 'fr', 'frs', 'frw', 'frl', 'frk', 'frg', 'rf', 'rfl'].forEach(k => { n[k] = g('.tc-' + k); });
+        n.car = g('.tc-car'); return n;
+      },
+      mouth() { return [100, 66]; },
+      pose(r, u) {
+        const T = TRAM, pr = T.pr, A = T.A, B = T.B, Y0 = T.Y0, Y1 = T.Y1;
+        /* 前半段較快、靠站時慢慢煞住 */
+        const t = u < 0 ? 0 : clamp(u / this.burst, 0, 1), s = (1 - (1 - t) * (1 - t)) * T.LT;
+        const [Xc, Zc, al] = T.at(s), fx = Math.cos(al), fz = Math.sin(al), lx = -fz, lz = fx;
+        const P = (fo, lo, Y) => pr(Xc + fx * fo + lx * lo, Y, Zc + fz * fo + lz * lo);
+        /* 面上的一塊矩形：(u0..u1, v0..v1) 是在該面上的相對位置 */
+        const front = (u0, u1, v0, v1) => poly([[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(q => P(A, -B + 2 * B * q[0], Y0 + (Y1 - Y0) * q[1])));
+        const lc = lx * Xc + lz * Zc, sg = lc > 0 ? -1 : 1, sideOn = Math.abs(lc) > B, frontOn = fx * Xc + fz * Zc < -A;
+        const side = (u0, u1, v0, v1) => poly([[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(q => P(-A + 2 * A * q[0], sg * B, Y0 + (Y1 - Y0) * q[1])));
+        r.car.setAttribute('stroke-width', clamp(7 / Zc, 0.25, 1.4).toFixed(2));
+        r.cs.setAttribute('d', poly([[-A, -B], [A, -B], [A, B], [-A, B]].map(q => P(q[0] + 0.3, q[1] * 1.1 + 0.25, 0))));
+        r.rf.setAttribute('d', poly([[-A, -B], [A, -B], [A, B], [-A, B]].map(q => P(q[0], q[1], Y1))));
+        r.rfl.setAttribute('d', poly([[-A, -0.3], [A, -0.3], [A, 0.3], [-A, 0.3]].map(q => P(q[0], q[1], Y1))));
+        const on = (k, d) => r[k].setAttribute('d', d);
+        if (sideOn) {
+          on('sd', side(0, 1, 0, 1)); on('sds', side(0, 1, 0.2, 0.32)); on('sdk', side(0, 1, 0, 0.17));
+          on('sdw', [0, 1, 2, 3, 4].map(i => side(0.07 + 0.185 * i, 0.21 + 0.185 * i, 0.5, 0.86)).join(' '));
+        } else ['sd', 'sds', 'sdk', 'sdw'].forEach(k => on(k, ''));
+        if (frontOn) {
+          on('fr', front(0, 1, 0, 1)); on('frs', front(0, 1, 0.2, 0.32)); on('frk', front(0, 1, 0, 0.17));
+          on('frw', front(0.08, 0.92, 0.52, 0.9)); on('frg', front(0.3, 0.7, 0.92, 0.99));
+          on('frl', front(0.05, 0.17, 0.2, 0.32) + ' ' + front(0.83, 0.95, 0.2, 0.32));
+        } else ['fr', 'frs', 'frk', 'frw', 'frg', 'frl'].forEach(k => on(k, ''));
+        return { squash: 0 };
+      }
+    },
+
+    /* ── 撕日曆：掛在牆上的日曆，一張一張撕掉，停在 date 指定的日期。有 chest-prize 才在最後出現文字，沒有就結束。沒有光芒與星光 ──
+       date 寫 2026-11-20、11-20 或 20（沒寫就是今天）；tear 是撕幾張（預設 5），所以第一張是 date 往前推 tear 天 */
+    calendar: {
+      main: '#EF6661', trim: '#E3D322', items: 'coin', count: 0, plain: true, hint: '點擊撕日曆', tail: 0.5, pd: 0, lift: [0, 0.1], cover: '',
+      /* 解析 date：2026-11-20、2026/11/20、11-20、20；解析不了就用今天 */
+      parse(str) {
+        const now = new Date(), m = String(str || '').match(/\d+/g) || [];
+        let y = now.getFullYear(), mo = now.getMonth(), d = now.getDate();
+        if (m.length >= 3) { y = +m[0]; mo = +m[1] - 1; d = +m[2]; } else if (m.length === 2) { mo = +m[0] - 1; d = +m[1]; } else if (m.length === 1) d = +m[0];
+        const dt = new Date(y, mo, d);
+        return isNaN(dt) ? now : dt;
+      },
+      n(o) { return clamp(Math.round(num(o.tear, 5)), 1, 12); },
+      tt(i) { return 0.15 + 0.3 * i; },
+      burstOf(o) { return 0.35 + 0.3 * this.n(o); },
+      svg(o, c, id) {
+        const ink = c.ink, n = this.n(o), end = this.parse(o.date), WD = ['日', '一', '二', '三', '四', '五', '六'];
+        const sheet = i => {
+          const d = new Date(end.getFullYear(), end.getMonth(), end.getDate() - n + i), wk = d.getDay(), col = wk === 0 || wk === 6 ? PALETTE.red : '#0C0D0C';
+          return `<g class="tc-pg" data-i="${i}">
+      <rect x="40" y="50" width="120" height="98" rx="2" fill="#F4F3EC" stroke="${ink}" stroke-width="2.2"/>
+      <text x="48" y="68" font-size="12" font-weight="800" fill="${col}" font-family="${SANS}">${d.getMonth() + 1}月</text>
+      <text x="152" y="68" text-anchor="end" font-size="12" font-weight="800" fill="${col}" font-family="${SANS}">週${WD[wk]}</text>
+      <text x="100" y="108" text-anchor="middle" dominant-baseline="central" font-size="58" font-weight="900" fill="${col}" font-family="${SERIF}">${d.getDate()}</text>
+      <text x="100" y="137" text-anchor="middle" dominant-baseline="central" font-size="9" font-weight="700" fill="${PALETTE.gray}" font-family="${SANS}">${d.getFullYear()}</text>
+    </g>`;
+        };
+        /* DOM 順序：第 0 張（最先撕）在最上面，最後放進去 */
+        const sheets = Array.from({ length: n + 1 }, (_, k) => sheet(n - k)).join('');
+        return `
+<g class="tc-sw">
+  <path d="M94,26 L100,-12 L106,26" fill="none" stroke="${o.trim}" stroke-width="2.4" stroke-linejoin="round"/>
+  <rect x="28" y="10" width="144" height="156" rx="8" fill="url(#${id}-m)" stroke="${ink}" stroke-width="3.5"/>
+  <circle cx="100" cy="27" r="4.4" fill="${ink}"/>
+  <path d="M40,40 H160" stroke="${c.mainD}" stroke-width="2" stroke-dasharray="3 4"/>
+  <rect class="tc-th" x="44" y="148" width="112" height="4" rx="2" fill="${PALETTE.shell}" stroke="${ink}" stroke-width="2"/>
+  ${sheets}
+  <rect x="36" y="46" width="128" height="8" rx="3" fill="url(#${id}-t)" stroke="${ink}" stroke-width="2.4"/>
+  <circle cx="52" cy="50" r="1.8" fill="${c.trimD}"/><circle cx="148" cy="50" r="1.8" fill="${c.trimD}"/>
+</g>
+<circle cx="100" cy="-14" r="4.6" fill="${PALETTE.gray}" stroke="${ink}" stroke-width="2.4"/>`;
+      },
+      refs(s) {
+        return { sw: s.querySelector('.tc-sw'), th: s.querySelector('.tc-th'), pg: [...s.querySelectorAll('.tc-pg')].sort((a, b) => a.dataset.i - b.dataset.i) };
+      },
+      mouth() { return [100, -20]; },
+      pose(r, u, rattle, o) {
+        const n = this.n(o);
+        let torn = 0, sway = u < 0 ? 2 * rattle : 0;
+        r.pg.forEach((g, i) => {
+          if (i >= n) { g.removeAttribute('transform'); g.style.display = ''; return; }
+          const w = u < 0 ? -1 : (u - this.tt(i)) / 0.55;
+          if (w <= 0) { g.removeAttribute('transform'); g.style.display = ''; return; }
+          torn++;
+          if (w >= 1) { g.style.display = 'none'; return; }
+          g.style.display = '';
+          /* 右上角先被捏起來掀開，再脫手往左下掉，一邊旋轉 */
+          const lift = clamp(w / 0.3, 0, 1), fall = Math.pow(Math.max(0, w - 0.3) / 0.7, 2);
+          const a = 28 * ease.out(lift) + 62 * Math.pow(Math.max(0, w - 0.3) / 0.7, 1.4);
+          g.setAttribute('transform', `translate(${(-26 * fall).toFixed(2)} ${(190 * fall).toFixed(2)}) rotate(${a.toFixed(2)} 160 52)`);
+        });
+        /* 每撕一張，整本日曆在釘子上晃一下 */
+        for (let i = 0; i < n; i++) { const dt = u - this.tt(i); if (u >= 0 && dt > 0) sway += (i % 2 ? -1 : 1) * 3.2 * Math.exp(-4 * dt) * Math.sin(20 * dt); }
+        r.sw.setAttribute('transform', `rotate(${sway.toFixed(2)} 100 -14)`);
+        r.th.setAttribute('height', Math.min(14, 2 + (n + 1 - torn)).toFixed(1));
+        const v2 = u - this.burstOf(o);
+        return { squash: u < 0 ? 0 : v2 > -0.05 && v2 < 0.15 ? 0.03 * Math.sin((v2 + 0.05) / 0.2 * Math.PI) : 0 };
+      }
+    },
+
+    /* ── 街道：約 45 度俯視的十字路口，面對的轉角是超商（轉角開門）。density（0 到 10）決定進出顧客的數量，同時決定四個車道的車流量。
+       紅綠燈輪流放行，車子會排隊、跟車；顧客走進超商、過一陣子再提著袋子走出來。沒有光芒與星光，有 chest-prize 才在 3.5 秒後出現文字 ── */
+    street: {
+      main: '#71CD76', trim: '#C6C7BD', items: 'coin', count: 0, plain: true, hint: '點擊開始營業', burst: 3.5, tail: 0.5, pd: 0, lift: [0, 0.1], cover: '',
+      DOOR: [-20.5, -20.5],
+      svg(o, c, id) {
+        const P = iso, ink = c.ink, W = '#F4F3EC';
+        const asphalt = mix(PALETTE.gray, '#000000', 0.5), walk = mix(PALETTE.shell, '#000000', 0.8), grass = mix(PALETTE.green, '#000000', 0.42);
+        const flat = (x0, y0, x1, y1, z = 0) => poly([P(x0, y0, z), P(x1, y0, z), P(x1, y1, z), P(x0, y1, z)]);
+        /* 面上的一塊矩形：O 是原點，U、V 是兩個方向，(u0..u1, v0..v1) 是在面上的相對位置 */
+        const Q = (O, U, V, u0, u1, v0, v1) => poly([[u0, v0], [u1, v0], [u1, v1], [u0, v1]].map(q => P(O[0] + U[0] * q[0] + V[0] * q[1], O[1] + U[1] * q[0] + V[1] * q[1], O[2] + U[2] * q[0] + V[2] * q[1])));
+        const box = (x0, y0, x1, y1, h, cT, cR, cL, win) => {
+          const OR = [x1, y0, 0], UR = [0, y1 - y0, 0], OL = [x0, y1, 0], UL = [x1 - x0, 0, 0], V = [0, 0, h];
+          const wins = (O, U) => [0, 1, 2].map(i => Q(O, U, V, 0.12 + i * 0.29, 0.34 + i * 0.29, 0.2, 0.8)).join(' ');
+          return `<path d="${poly([P(x1, y0, 0), P(x1, y1, 0), P(x1, y1, h), P(x1, y0, h)])}" fill="${cR}"/><path d="${poly([P(x0, y1, 0), P(x1, y1, 0), P(x1, y1, h), P(x0, y1, h)])}" fill="${cL}"/>`
+            + `<path d="${wins(OR, UR)}" fill="${win}"/><path d="${wins(OL, UL)}" fill="${win}"/><path d="${flat(x0, y0, x1, y1, h)}" fill="${cT}"/>`;
+        };
+        /* 斑馬線與車道線 */
+        const zebra = (fn) => Array.from({ length: 6 }, (_, i) => fn(-8 + i * 3.2)).join(' ');
+        const zA = [13, -17].map(x0 => zebra(y => flat(x0, y - 0.9, x0 + 4, y + 0.9))).join(' '), zB = [13, -17].map(y0 => zebra(x => flat(x - 0.9, y0, x + 0.9, y0 + 4))).join(' ');
+        const dash = pts => 'M' + pts.map(q => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' L');
+        const center = [dash([P(-110, 0), P(-19, 0)]), dash([P(19, 0), P(110, 0)]), dash([P(0, -110), P(0, -19)]), dash([P(0, 19), P(0, 110)])].join(' ');
+        /* 超商：轉角切掉一個斜面當作入口，斜面正對鏡頭 */
+        const x0 = -42, y0 = -42, x1 = -16, y1 = -16, cc = 9, H = 24, V = [0, 0, H];
+        const FR = [x1, y0, 0], UR = [0, (y1 - cc) - y0, 0], FL = [x0, y1, 0], UL = [(x1 - cc) - x0, 0, 0], FC = [x1, y1 - cc, 0], UC = [-cc, cc, 0];
+        const glass = mix(PALETTE.blue, '#000000', 0.45), ink2 = c.mainD;
+        const sign = (O, U) => `<path d="${Q(O, U, V, 0, 1, 0.8, 1)}" fill="${o.main}"/><path d="${Q(O, U, V, 0, 1, 0.74, 0.79)}" fill="${PALETTE.salmon}"/>`;
+        const front = (O, U, k) => `<path d="${poly([[0, 0], [1, 0], [1, 1], [0, 1]].map(q => P(O[0] + U[0] * q[0], O[1] + U[1] * q[0], H * q[1])))}" fill="${k}"/>`;
+        const NV = [3.2, 3.2, -3.4], aw = (u, z) => P(FC[0] + UC[0] * u, FC[1] + UC[1] * u, H * 0.68 + z);
+        const awning = Array.from({ length: 6 }, (_, i) => { const u0 = 0.08 + i * 0.14, u1 = u0 + 0.14, a = P(FC[0] + UC[0] * u0, FC[1] + UC[1] * u0, H * 0.68), b = P(FC[0] + UC[0] * u1, FC[1] + UC[1] * u1, H * 0.68), a2 = P(FC[0] + UC[0] * u0 + NV[0], FC[1] + UC[1] * u0 + NV[1], H * 0.68 + NV[2]), b2 = P(FC[0] + UC[0] * u1 + NV[0], FC[1] + UC[1] * u1 + NV[1], H * 0.68 + NV[2]); return `<path d="${poly([a, b, b2, a2])}" fill="${i % 2 ? W : o.main}" stroke="${ink}" stroke-width="0.4"/>`; }).join('');
+        const store = `
+  ${front(FR, UR, mix(W, '#000000', 0.86))}${front(FL, UL, mix(W, '#000000', 0.74))}${front(FC, UC, W)}
+  ${sign(FR, UR)}${sign(FL, UL)}${sign(FC, UC)}
+  <path d="${Q(FR, UR, V, 0.1, 0.9, 0.14, 0.6)} ${Q(FL, UL, V, 0.1, 0.9, 0.14, 0.6)}" fill="${glass}"/>
+  <path d="${Q(FC, UC, V, 0.18, 0.82, 0, 0.64)}" fill="${ink2}"/>
+  <path class="tc-dg" d="${Q(FC, UC, V, 0.22, 0.48, 0.02, 0.6)} ${Q(FC, UC, V, 0.52, 0.78, 0.02, 0.6)}" fill="${glass}"/>
+  <path d="${poly([P(x0, y0, H), P(x1, y0, H), P(x1, y1 - cc, H), P(x1 - cc, y1, H), P(x0, y1, H)])}" fill="${mix(PALETTE.shell, '#000000', 0.62)}" stroke="${ink}" stroke-width="0.6"/>
+  ${awning}`;
+        const tree = (x, y) => { const q = P(x, y); return `<g class="tc-st" data-d="${x + y}" transform="translate(${q[0].toFixed(1)} ${q[1].toFixed(1)}) scale(0.8)"><ellipse cx="0" cy="0.5" rx="6" ry="2.4" fill="${mix(grass, '#000000', 0.6)}"/><rect x="-1.1" y="-7" width="2.2" height="7" fill="${PALETTE['bg-alternative']}"/><circle cx="-3.4" cy="-9" r="4.4" fill="${mix(PALETTE.green, '#000000', 0.6)}" stroke="${ink}" stroke-width="0.5"/><circle cx="3.4" cy="-9" r="4.4" fill="${mix(PALETTE.green, '#000000', 0.6)}" stroke="${ink}" stroke-width="0.5"/><circle cx="0" cy="-12" r="5.2" fill="${mix(PALETTE.green, '#000000', 0.78)}" stroke="${ink}" stroke-width="0.5"/></g>`; };
+        const pq = P(13, 13), pole = `<g class="tc-st" data-d="26" transform="translate(${pq[0].toFixed(1)} ${pq[1].toFixed(1)})"><path d="M0,0 L0,-17" stroke="${PALETTE.gray}" stroke-width="1.6"/><rect x="-6" y="-24" width="12" height="7" rx="2" fill="#0C0D0C" stroke="${PALETTE.gray}" stroke-width="0.8"/><circle class="tc-lA" cx="-3" cy="-20.5" r="2" fill="${PALETTE.red}"/><circle class="tc-lB" cx="3" cy="-20.5" r="2" fill="${PALETTE.red}"/></g>`;
+        return `
+<defs><clipPath id="${id}-pn"><rect x="14" y="18" width="172" height="144" rx="11"/></clipPath></defs>
+<g clip-path="url(#${id}-pn)">
+  <rect x="14" y="18" width="172" height="144" fill="${mix(PALETTE.blue, '#FFFFFF', 0.7)}"/>
+  <path d="${flat(-110, -110, 110, 110)}" fill="${grass}"/>
+  <path d="${flat(11, 11, 44, 44)} ${flat(-44, 11, -11, 44)} ${flat(11, -44, 44, -11)} ${flat(-44, -44, -11, -11)} ${flat(-110, -16, 110, -11)} ${flat(-110, 11, 110, 16)} ${flat(-16, -110, -11, 110)} ${flat(11, -110, 16, 110)}" fill="${walk}"/>
+  <path d="${flat(14, 14, 41, 41)}" fill="${grass}"/>
+  <path d="${flat(-110, -11, 110, 11)} ${flat(-11, -110, 11, 110)}" fill="${asphalt}"/>
+  <path d="${center}" fill="none" stroke="${PALETTE.yellow}" stroke-width="1" stroke-dasharray="4 3"/>
+  <path d="${zA} ${zB}" fill="${PALETTE.vanilla}"/>
+  ${box(-42, 18, -18, 42, 10, mix(PALETTE.calm, '#FFFFFF', 0.8), mix(PALETTE.calm, '#000000', 0.8), mix(PALETTE.calm, '#000000', 0.68), mix(PALETTE.indigo, '#000000', 0.5))}
+  ${box(18, -42, 42, -18, 16, mix(PALETTE.quiet, '#FFFFFF', 0.8), mix(PALETTE.quiet, '#000000', 0.8), mix(PALETTE.quiet, '#000000', 0.68), mix(PALETTE.indigo, '#000000', 0.5))}
+  ${store}
+  <g class="tc-dyn" stroke-linejoin="round">${pole}${tree(27, 27)}${tree(38, 22)}${tree(24, 38)}${tree(37, 37)}</g>
+</g>${sceneFrame(c, id)}`;
+      },
+      refs(s) {
+        return { dyn: s.querySelector('.tc-dyn'), dg: s.querySelector('.tc-dg'), lA: s.querySelector('.tc-lA'), lB: s.querySelector('.tc-lB'), stat: [...s.querySelectorAll('.tc-st')].map(el => ({ el, d: +el.dataset.d })), sim: null, lu: -1 };
+      },
+      mouth() { return [100, 44]; },
+      /* 紅綠燈：A 路（沿 x）綠 3.4 秒、黃 0.8 秒、全紅 0.6 秒，再換 B 路 */
+      phase(t) {
+        const T = t % 9.6;
+        return { A: T < 3.4 ? 'g' : T < 4.2 ? 'y' : 'r', B: T >= 4.8 && T < 8.2 ? 'g' : T >= 8.2 && T < 9 ? 'y' : 'r' };
+      },
+      init(r, o) {
+        let a = (Math.random() * 4294967296) >>> 0;
+        const rnd = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+        const dens = clamp(num(o.density, 5), 0, 10);
+        const S = r.sim = { rnd, dens, time: 0, pt: 0.3, exits: [], peds: [], lanes: [
+          { ax: 'x', dir: 1, off: 5.5, road: 'A', cars: [], t: 0.2 }, { ax: 'x', dir: -1, off: -5.5, road: 'A', cars: [], t: 0.9 },
+          { ax: 'y', dir: 1, off: -5.5, road: 'B', cars: [], t: 0.5 }, { ax: 'y', dir: -1, off: 5.5, road: 'B', cars: [], t: 1.3 }] };
+        /* 一開始就有幾位顧客在店裡，等一下陸續走出來 */
+        for (let i = 0; i < Math.round(dens / 2); i++) S.exits.push(0.5 + rnd() * 3.5);
+        /* 先暖機 8 秒，待機時就是一個有車有人的畫面 */
+        for (let i = 0; i < 160; i++) this.step(r, 0.05);
+      },
+      mk(r, svg) { const g = document.createElementNS(NS, 'g'); g.innerHTML = svg; r.dyn.appendChild(g); return g; },
+      step(r, dt) {
+        const S = r.sim, rnd = S.rnd, ph = this.phase(S.time + dt), pal = ['red', 'blue', 'yellow', 'shell', 'pink', 'green', 'indigo', 'salmon', 'violet', 'key'].map(n => PALETTE[n]), ink = '#0C0D0C';
+        S.time += dt;
+        /* ── 車流：每個車道各自生車，前車太近就減速，紅燈與黃燈停在停止線前 ── */
+        S.lanes.forEach(L => {
+          if (S.dens > 0) {
+            L.t -= dt;
+            const last = L.cars[L.cars.length - 1];
+            if (L.t <= 0 && (!last || last.p - last.L / 2 > 4)) {
+              const col = pal[(rnd() * pal.length) | 0], car = { p: 0, v: 18, L: 10, el: null };
+              car.el = this.mk(r, carSVG(L.ax, L.dir, col, ink)); L.cars.push(car);
+              L.t = -Math.log(1 - rnd()) / (S.dens * 0.05);
+            } else if (L.t <= 0) L.t = 0.2;
+          }
+          L.cars.forEach((c, i) => {
+            const lead = L.cars[i - 1], light = ph[L.road], dist = 87 - (c.p + c.L / 2);
+            let target = 22;
+            if (lead) target = Math.min(target, Math.max(0, lead.p - lead.L / 2 - (c.p + c.L / 2) - 2.5) * 4);
+            if (light !== 'g' && dist > -0.5 && (light === 'r' || dist > 3.5)) target = Math.min(target, Math.max(0, dist) * 3);
+            c.v += Math.max(-45 * dt, Math.min(14 * dt, target - c.v)); c.p += c.v * dt;
+          });
+          L.cars = L.cars.filter(c => { if (c.p > 215) { c.el.remove(); return false; } return true; });
+        });
+        /* ── 顧客：從兩條人行道走來，走進斜面的門；店裡的人過一陣子再提著袋子走出來 ── */
+        const door = this.DOOR, app = [-17.5, -17.5], newPed = (path, kind) => {
+          const shirt = ['yellow', 'pink', 'key', 'green', 'blue', 'violet', 'playful', 'salmon', 'energetic', 'red'].map(n => PALETTE[n])[(rnd() * 10) | 0], skin = [PALETTE.salmon, PALETTE.playful, '#8A5530'][(rnd() * 3) | 0];
+          S.peds.push({ x: path[0][0], y: path[0][1], path, i: 1, sp: 11 + rnd() * 5, kind, sc: kind === 'out' ? 0 : 1, ph: rnd() * 6, el: this.mk(r, pedSVG(shirt, skin, kind === 'out', ink, PALETTE.vanilla)) });
+        };
+        S.pt -= dt;
+        if (S.dens > 0 && S.pt <= 0 && S.peds.length < 14) {
+          newPed(rnd() < 0.5 ? [[-105, -13.5], [-18, -13.5], app, door] : [[-13.5, -105], [-13.5, -18], app, door], 'in');
+          S.pt = -Math.log(1 - rnd()) / (S.dens * 0.1);
+        } else if (S.pt <= 0) S.pt = 0.3;
+        S.exits = S.exits.filter(t => { if (t <= S.time && S.peds.length < 16) { newPed(rnd() < 0.5 ? [door, app, [-18, -13.5], [-105, -13.5]] : [door, app, [-13.5, -18], [-13.5, -105]], 'out'); return false; } return true; });
+        S.peds = S.peds.filter(q => {
+          if (q.kind === 'out') q.sc = Math.min(1, q.sc + dt * 4);
+          const tg = q.path[q.i], dx = tg[0] - q.x, dy = tg[1] - q.y, d = Math.hypot(dx, dy), st = q.sp * dt;
+          if (d <= st) { q.x = tg[0]; q.y = tg[1]; q.i++; } else { q.x += dx / d * st; q.y += dy / d * st; }
+          q.ph += dt * 12;
+          if (q.i >= q.path.length) {
+            if (q.kind === 'in') S.exits.push(S.time + 1.2 + rnd() * 3.5);
+            q.el.remove(); return false;
+          }
+          /* 走進門的最後一段：身體縮窄，像是被門吞進去 */
+          if (q.kind === 'in' && q.i === q.path.length - 1) q.sc = Math.max(0.1, Math.hypot(door[0] - q.x, door[1] - q.y) / 4.2);
+          return true;
+        });
+      },
+      pose(r, u, rattle, o) {
+        if (!r.sim) this.init(r, o);
+        const S = r.sim, dt = u < 0 ? 0 : clamp(u - (r.lu < 0 ? 0 : r.lu), 0, 0.05);
+        r.lu = u;
+        if (dt > 0) this.step(r, dt);
+        const ents = r.stat.slice(), col = { g: PALETTE.green, y: PALETTE.yellow, r: PALETTE.red }, ph = this.phase(S.time), dr = this.DOOR;
+        r.lA.setAttribute('fill', col[ph.A]); r.lB.setAttribute('fill', col[ph.B]);
+        S.lanes.forEach(L => L.cars.forEach(c => {
+          const a = L.dir > 0 ? -100 + c.p : 100 - c.p, x = L.ax === 'x' ? a : L.off, y = L.ax === 'x' ? L.off : a, q = iso(x, y);
+          c.el.setAttribute('transform', `translate(${q[0].toFixed(2)} ${q[1].toFixed(2)})`); ents.push({ el: c.el, d: x + y });
+        }));
+        let near = 0;
+        S.peds.forEach(q => {
+          const p = iso(q.x, q.y), bob = Math.abs(Math.sin(q.ph)) * 0.7;
+          if (Math.hypot(q.x - dr[0], q.y - dr[1]) < 5) near++;
+          q.el.setAttribute('transform', `translate(${p[0].toFixed(2)} ${(p[1] - bob).toFixed(2)}) scale(${q.sc.toFixed(2)} 1)`); ents.push({ el: q.el, d: q.x + q.y + 0.3 });
+        });
+        r.dg.setAttribute('fill', near ? PALETTE.vanilla : mix(PALETTE.blue, '#000000', 0.45));
+        /* 由遠到近排序：離鏡頭越近的越晚畫 */
+        ents.sort((a, b) => a.d - b.d).forEach((e, i) => { if (r.dyn.children[i] !== e.el) r.dyn.insertBefore(e.el, r.dyn.children[i] || null); });
+        return { squash: 0 };
+      }
     }
   };
 
@@ -492,9 +1051,9 @@ ${digits}
         type, size: num(a('size'), 220), trigger: a('trigger', 'click'), delay: num(a('delay'), 300),
         bg: color(a('bg', 'base')), gold: color(a('gold', 'yellow')), light: color(a('light', '#FFF6C8')),
         main: color(a('chest-color', T.main)), trim: color(a('trim-color', T.trim)), capsule: color(a('capsule-color', 'pink')),
-        rays: Math.max(0, Math.round(num(a('rays'), 14))), raySpeed: num(a('ray-speed'), 10),
-        sparkles: Math.max(0, num(a('sparkles'), 80)), coins: Math.max(0, num(a('coins'), T.count)),
-        ambient: a('ambient', 'true') !== 'false', shake: this._shakeVal(a('shake', '0.5')),
+        rays: Math.max(0, Math.round(num(a('rays'), T.plain ? 0 : 14))), date: a('date', ''), tear: a('tear', '5'), density: a('density', '5'), raySpeed: num(a('ray-speed'), 10),
+        sparkles: Math.max(0, num(a('sparkles'), T.plain ? 0 : 80)), coins: Math.max(0, num(a('coins'), T.count)),
+        ambient: a('ambient', T.plain ? 'false' : 'true') !== 'false', shake: this._shakeVal(a('shake', '0')),
         hint: a('hint', T.hint), replay: this.hasAttribute('replay'),
         words: a('words', ''), stamp: a('stamp', T.stamp || ''), cover: a('cover-text', T.cover || ''), digits: a('digits', '05687777'),
         prizeBg: color(a('prize-bg', 'base')), prizeColor: color(a('prize-color', 'yellow')), prizeSize: a('prize-size', '1.4rem'),
@@ -644,15 +1203,15 @@ ${digits}
       } else if (u < 0) u = 0;
       this._apply(u, rattle, rot, squash, hop);
       /* v：相對於光芒噴出的時間（寶箱為 u − 0.06，與 v1.2 時間點一致） */
-      const v = u - T.burst;
+      const v = u - (T.burstOf ? T.burstOf(o) : T.burst);
       if (v >= 0) {
         if (!this._burst) { this._burst = true; this._spawnBurst(); }
-        const pu = Math.max(0, v - 0.24), pk = pu < 0.55 ? ease.back(pu / 0.55) : 1, rise = ease.out(Math.min(1, pu / 0.7));
-        const m = this._mouth(), top = m.y - o.size * (0.18 + 0.52 * rise);
+        const pu = Math.max(0, v - (T.pd === undefined ? 0.24 : T.pd)), pk = pu < 0.55 ? ease.back(pu / 0.55) : 1, rise = ease.out(Math.min(1, pu / 0.7));
+        const m = this._mouth(), L = T.lift || [0.18, 0.7], top = m.y - o.size * (L[0] + (L[1] - L[0]) * rise);
         this.prize.style.left = m.x + 'px'; this.prize.style.top = top + 'px';
         this.prize.style.transform = `translate(-50%,-50%) scale(${Math.max(0, pk)})`;
         this.intensity = Math.min(1, (v + 0.06) / 0.5);
-        if (this.state === 'opening' && v > 1.24) {
+        if (this.state === 'opening' && v > (T.tail || 1.24)) {
           this.state = 'open';
           const res = this._runTargets();
           this.dispatchEvent(new CustomEvent('treasure-chest:opened', { bubbles: true, detail: Object.assign({ type: o.type }, res) }));
@@ -669,7 +1228,7 @@ ${digits}
     _drawBack(t) {
       const o = this._o, c = this.back.getContext('2d'), I = this.intensity;
       c.globalCompositeOperation = 'source-over'; c.fillStyle = o.bg; c.fillRect(0, 0, this.W, this.H);
-      if (I <= 0) return;
+      if (I <= 0 || this.T.plain) return;
       const m = this._mouth();
       c.globalCompositeOperation = 'lighter';
       const cx = m.x, cy = m.y - o.size * 0.05, grow = ease.out(I);
@@ -695,13 +1254,13 @@ ${digits}
 
     /* ── 粒子：星光、金幣、彩紙 ── */
     _spawnBurst() {
-      const o = this._o, kind = this.T.items, conf = kind === 'confetti' || kind === 'slip', m = this._mouth();
+      const o = this._o, kind = this.T.items, conf = kind === 'confetti' || kind === 'slip' || kind === 'news', m = this._mouth();
       for (let i = 0; i < o.sparkles; i++) this._spark(false);
       if (kind === 'word') { for (let i = 0; i < o.coins; i++) this._word(false); return; }
       for (let i = 0; i < o.coins; i++) {
         const a = -Math.PI / 2 + (Math.random() - 0.5) * (conf ? 2.2 : 1.5), v = o.size * (conf ? 2.2 + Math.random() * 2.2 : 2.4 + Math.random() * 1.6);
         this.items.push({ kind, x: m.x + (Math.random() - 0.5) * o.size * 0.4, y: m.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
-          r: o.size * (kind === 'slip' ? 0.05 + Math.random() * 0.025 : conf ? 0.03 + Math.random() * 0.02 : 0.045 + Math.random() * 0.02), ph: Math.random() * 6.28, spin: 8 + Math.random() * 8,
+          r: o.size * (kind === 'slip' || kind === 'news' ? 0.05 + Math.random() * 0.025 : conf ? 0.03 + Math.random() * 0.02 : 0.045 + Math.random() * 0.02), ph: Math.random() * 6.28, spin: 8 + Math.random() * 8,
           col: CONFETTI[(Math.random() * CONFETTI.length) | 0], rot: Math.random() * 6.28, life: 0 });
       }
     }
@@ -753,11 +1312,19 @@ ${digits}
           }
           return;
         }
-        if (p.kind === 'confetti' || p.kind === 'slip') {
+        if (p.kind === 'confetti' || p.kind === 'slip' || p.kind === 'news') {
           p.vy += o.size * 3.2 * dt; p.vx *= Math.pow(0.5, dt); p.vy = Math.min(p.vy, o.size * 1.1);
           p.x += (p.vx + Math.sin(p.life * 6 + p.ph) * o.size * 0.25) * dt; p.y += p.vy * dt; p.rot += dt * 5;
           c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.scale(1, Math.max(0.15, Math.abs(Math.cos(p.life * 9 + p.ph))));
-          if (p.kind === 'slip') {
+          if (p.kind === 'news') {
+            /* 報紙：刊頭、照片、文字行 */
+            c.fillStyle = '#F4F3EC'; c.fillRect(-p.r * 0.85, -p.r * 1.2, p.r * 1.7, p.r * 2.4);
+            c.fillStyle = '#0C0D0C'; c.fillRect(-p.r * 0.7, -p.r * 1.05, p.r * 1.4, p.r * 0.3);
+            c.fillStyle = p.col; c.fillRect(-p.r * 0.7, -p.r * 0.55, p.r * 0.62, p.r * 0.6);
+            c.fillStyle = '#86877F';
+            c.fillRect(0, -p.r * 0.5, p.r * 0.7, p.r * 0.13); c.fillRect(0, -p.r * 0.25, p.r * 0.7, p.r * 0.13); c.fillRect(0, 0, p.r * 0.7, p.r * 0.13);
+            c.fillRect(-p.r * 0.7, p.r * 0.25, p.r * 1.4, p.r * 0.13); c.fillRect(-p.r * 0.7, p.r * 0.5, p.r * 1.4, p.r * 0.13); c.fillRect(-p.r * 0.7, p.r * 0.75, p.r * 0.95, p.r * 0.13);
+          } else if (p.kind === 'slip') {
             c.fillStyle = '#F4F3EC'; c.fillRect(-p.r * 0.8, -p.r * 1.2, p.r * 1.6, p.r * 2.4);
             c.fillStyle = p.col; c.fillRect(-p.r * 0.8, -p.r * 0.95, p.r * 1.6, p.r * 0.45);
             c.fillStyle = '#86877F'; c.fillRect(-p.r * 0.55, -p.r * 0.1, p.r * 1.1, p.r * 0.18); c.fillRect(-p.r * 0.55, p.r * 0.35, p.r * 0.8, p.r * 0.18);
