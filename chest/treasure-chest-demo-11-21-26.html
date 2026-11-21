@@ -53,6 +53,45 @@
   <h1>treasure-chest：開寶箱的獎勵動畫</h1>
   <p class="lead-note">一個元件、十四種圖形，用 <code>type</code> 切換：<code>chest</code> 寶箱、<code>trophy</code> 獎盃、<code>gift</code> 禮物盒、<code>gacha</code> 轉蛋機、<code>book</code> 魔法書、<code>almanac</code> 農民曆、<code>receipt</code> 對發票機、<code>tudigong</code> 土地公、<code>news</code> 新聞快報、<code>curtain</code> 拉布幕、<code>shuttle</code> 太空梭、<code>tram</code> 輕軌、<code>calendar</code> 撕日曆、<code>street</code> 街道。越新增的範例放越上面；每個範例的「畫面」與「程式碼」由同一段原始碼產生。單一 <code>treasure-chest.js</code>，CSS 內建，不用 Shadow DOM。</p>
 
+  <h2 class="part">文字顏色（book、almanac）</h2>
+
+  <section class="demo full" data-demo>
+    <h2>固定配色 <code>word-colors="auto"</code></h2>
+    <p class="desc">飄出來的文字原本從 9 色裡隨機挑色，同一個詞每次顏色都不同，而且有幾組色相很接近。寫 <code>word-colors="auto"</code> 改用 11 色，第 n 個詞固定用第 n 個顏色，所以下面 11 個詞各自是不同顏色。沒寫 <code>word-colors</code> 就維持原本的隨機配色。詞比顏色多時，顏色會輪流重複。兩本都用 <code>coins="30"</code>，讓 11 個詞都有機會飄出來。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（左：沒寫 word-colors，右：auto。點書打開，開完再點一次重來）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="book" size="170" replay coins="30" cover-text="Grammar"
+                words="主詞, 冠詞, 補語, 子句, 不定詞, 動名詞, 修飾語, 倒裝句, 假設語氣, 被動, 完成式"
+                hint="沒寫 word-colors">
+</treasure-chest>
+<treasure-chest type="book" size="170" replay coins="30" cover-text="Grammar"
+                words="主詞, 冠詞, 補語, 子句, 不定詞, 動名詞, 修飾語, 倒裝句, 假設語氣, 被動, 完成式"
+                word-colors="auto" hint="word-colors=auto">
+</treasure-chest>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>自訂顏色 <code>word-colors="key, yellow, pink"</code></h2>
+    <p class="desc">顏色用逗號分隔，可以寫色票名稱或任何 CSS 顏色（例如 <code>#FFA987</code>）。這裡只給三種顏色，六個詞會依序輪流使用：第 1 個詞和第 4 個詞同色，其餘類推。農民曆也適用。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面（點擊打開，開完再點一次重來）</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<treasure-chest type="book" size="170" replay coins="24"
+                words="Aa, Bb, 學, 習, 7.0, Good" cover-text="單字本"
+                word-colors="key, yellow, pink">
+</treasure-chest>
+<treasure-chest type="almanac" size="170" replay
+                word-colors="red, #FFA987, green, blue">
+</treasure-chest>
+    </script>
+  </section>
+
   <h2 class="part">街道（沒有光芒）</h2>
 
   <section class="demo" data-demo>
@@ -476,6 +515,7 @@
       <tr><td><code>hint</code></td><td>依 type</td><td>trigger="click" 時圖形下方的提示文字；寫空字串不顯示。</td></tr>
       <tr><td><code>prize-bg</code>、<code>prize-color</code>、<code>prize-size</code></td><td>base、yellow、1.4rem</td><td>獎品框的底色、文字色、字級（只寫數字視為 rem）。外框用 gold 的顏色。</td></tr>
       <tr><td><code>words</code></td><td>各圖形有預設</td><td>book、almanac 飄出來的文字，用逗號分隔。</td></tr>
+      <tr><td><code>word-colors</code></td><td>無（隨機配色）</td><td>book、almanac 飄出來的文字顏色。auto 使用內建 11 色；也可以自己寫，用逗號分隔，可寫色票名稱或任何 CSS 顏色，例如 red, key, #FFA987。第 n 個詞固定用第 n 個顏色，詞比顏色多時輪流重複；沒寫就維持隨機配色。</td></tr>
       <tr><td><code>stamp</code></td><td>宜、中獎</td><td>almanac、receipt 印章上的字。</td></tr>
       <tr><td><code>cover-text</code></td><td>依 type</td><td>book 封面下方的字；almanac 封面直排的字（預設農民曆，最多五個字）；news 字幕條上的課程標題（選用，太長會跑馬燈）；curtain 匾額上的字（不寫就是一個元寶）。</td></tr>
       <tr><td><code>date</code></td><td>今天</td><td>calendar 停下來的日期，寫 2026-11-20、11-20 或 20。</td></tr>

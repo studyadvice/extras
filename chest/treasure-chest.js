@@ -19,6 +19,16 @@
   /* 元寶：兩頭翹起、中間隆起的船形 */
   const ingotPath = (x, y, r) => `M${x - 1.3 * r},${y - 0.2 * r} Q${x - 1.3 * r},${y - 0.95 * r} ${x - 0.8 * r},${y - 0.75 * r} Q${x},${y - 0.1 * r} ${x + 0.8 * r},${y - 0.75 * r} Q${x + 1.3 * r},${y - 0.95 * r} ${x + 1.3 * r},${y - 0.2 * r} Q${x + 1.1 * r},${y + 0.9 * r} ${x},${y + 0.9 * r} Q${x - 1.1 * r},${y + 0.9 * r} ${x - 1.3 * r},${y - 0.2 * r} Z`;
   const CONFETTI = ['yellow', 'pink', 'key', 'green', 'blue', 'violet', 'playful', 'salmon', 'energetic'].map(c => PALETTE[c]);
+  /* 文字粒子專用的 11 色：色相盡量分散。word-colors="auto" 時使用 */
+  const WORD_COLORS = ['red', 'playful', 'yellow', 'energetic', 'green', 'key', 'blue', 'indigo', 'violet', 'pink', 'urgent'].map(c => PALETTE[c]);
+  /* word-colors 屬性：沒寫 = 維持原本隨機；auto = 內建 11 色；也可自訂，例如 "red, key, #FFA987"。第 n 個詞固定用第 n 個顏色，詞比顏色多時輪流重複 */
+  const parseWordColors = v => {
+    const s = String(v || '').trim();
+    if (!s) return null;
+    if (s.toLowerCase() === 'auto') return WORD_COLORS;
+    const list = s.split(/[,，、\s]+/).filter(Boolean).map(color).filter(Boolean);
+    return list.length ? list : null;
+  };
 
   const STYLE = `
 treasure-chest{display:inline-block;position:relative;vertical-align:middle;}
@@ -1055,7 +1065,7 @@ ${tassel}
         sparkles: Math.max(0, num(a('sparkles'), T.plain ? 0 : 80)), coins: Math.max(0, num(a('coins'), T.count)),
         ambient: a('ambient', T.plain ? 'false' : 'true') !== 'false', shake: this._shakeVal(a('shake', '0')),
         hint: a('hint', T.hint), replay: this.hasAttribute('replay'),
-        words: a('words', ''), stamp: a('stamp', T.stamp || ''), cover: a('cover-text', T.cover || ''), digits: a('digits', '05687777'),
+        words: a('words', ''), wordColors: parseWordColors(a('word-colors', '')), stamp: a('stamp', T.stamp || ''), cover: a('cover-text', T.cover || ''), digits: a('digits', '05687777'),
         prizeBg: color(a('prize-bg', 'base')), prizeColor: color(a('prize-color', 'yellow')), prizeSize: a('prize-size', '1.4rem'),
         reveal: a('reveal-targets', ''), remove: a('remove-targets', '')
       };
@@ -1277,8 +1287,9 @@ ${tassel}
       const o = this._o, m = this._mouth(), list = this._words();
       if (!list.length) return;
       const a = -Math.PI / 2 + (Math.random() - 0.5) * (ambient ? 0.7 : 2.0), v = o.size * (ambient ? 0.25 + Math.random() * 0.3 : 0.9 + Math.random() * 1.3);
-      this.items.push({ kind: 'word', txt: list[(Math.random() * list.length) | 0], x: m.x + (Math.random() - 0.5) * o.size * (ambient ? 0.8 : 0.5), y: m.y,
-        vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: o.size * (0.085 + Math.random() * 0.05), col: CONFETTI[(Math.random() * CONFETTI.length) | 0],
+      const idx = (Math.random() * list.length) | 0;
+      this.items.push({ kind: 'word', txt: list[idx], x: m.x + (Math.random() - 0.5) * o.size * (ambient ? 0.8 : 0.5), y: m.y,
+        vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: o.size * (0.085 + Math.random() * 0.05), col: o.wordColors ? o.wordColors[idx % o.wordColors.length] : CONFETTI[(Math.random() * CONFETTI.length) | 0],
         ph: Math.random() * 6.28, life: 0, max: 2.4 + Math.random() * 1.4 });
     }
     _drawFront(dt) {
