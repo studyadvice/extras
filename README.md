@@ -28,7 +28,7 @@
 
 | 名稱 | 色碼 | 名稱 | 色碼 | 名稱 | 色碼 |
 | --- | --- | --- | --- | --- | --- |
-| base | `#0C0D0C` | bg-alternative | `#3B2A20` | shell | `#C6C7BD` |
+| base | `#0C0D0C` | bg-alternative | `#2D2D2D` | shell | `#C6C7BD` |
 | vanilla | `#DBEDD8` | yellow | `#E3D322` | pink | `#FF91D7` |
 | red | `#EF6661` | green | `#71CD76` | blue | `#5DBAE8` |
 | indigo | `#778CE1` | violet | `#B484E8` | gray | `#86877F` |

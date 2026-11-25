@@ -2,7 +2,7 @@
 
 `<treasure-chest>` 播放一段開啟獎勵的動畫：先搖晃，再打開，背後射出旋轉的金色光芒，星光與金幣（或彩紙）噴出，獎品從開口升起。四種圖形用 `type` 切換。圖形是 SVG，光芒與粒子畫在 canvas 上；光芒以實色漸層過渡到 `bg` 背景色、以亮度相加的方式疊亮，不使用透明度。
 
-單一檔案 `treasure-chest.js`，CSS 內建，不使用 Shadow DOM，不需要任何外部資源。範例頁：[`treasure-chest-demo-11-16-26.html`](treasure-chest-demo-11-16-26.html)。
+單一檔案 `treasure-chest.js`，CSS 內建，不使用 Shadow DOM，不需要任何外部資源。範例頁：[`treasure-chest-demo-11-21-26.html`](treasure-chest-demo-11-21-26.html)。
 
 ## 目錄
 
