@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rect-weave 範例</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #0C0D0C; color: #C6C7BD; font-family: system-ui, "Noto Sans TC", sans-serif; font-size: 1rem; line-height: 1.7; }
+  .page { max-width: 1680px; margin: 0 auto; padding: 32px 38px 120px 38px; }
+  h1 { color: #5DBAE8; font-size: 1.8rem; margin: 0 0 8px 0; }
+  .lead { color: #86877F; margin: 0 0 32px 0; }
+  .sec { margin: 0 0 38px 0; }
+  .sec h2 { color: #E3D322; font-size: 1.3rem; margin: 0 0 6px 0; border-bottom: 1px solid #2D2D2D; padding: 0 0 8px 0; }
+  .desc { color: #86877F; font-size: 0.95rem; margin: 0 0 16px 0; }
+  .cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+  .stage { background: #161716; border: 1px solid #2D2D2D; border-radius: 8px; padding: 28px; min-width: 0; display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+  .stage.blank { border: 1px dashed #EF6661; min-height: 160px; }
+  .cap { display: flex; flex-direction: column; gap: 8px; color: #86877F; font-size: 0.85rem; }
+  pre { background: #2D2D2D; color: #DBEDD8; border-radius: 8px; padding: 16px; margin: 0; font-size: 0.8rem; line-height: 1.6; white-space: pre-wrap; }
+  code { color: #FF91D7; }
+  .nb { background: #0C0D0C; color: #DBEDD8; border: 1px solid #86877F; border-radius: 6px; padding: 5px 16px; font: inherit; font-size: 0.9rem; cursor: pointer; }
+  .nb:hover { border-color: #5DBAE8; color: #5DBAE8; }
+  .btns { display: flex; gap: 10px; margin: 0 0 16px 0; }
+  table.attrs { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  table.attrs th, table.attrs td { border: 1px solid #2D2D2D; padding: 8px 12px; text-align: left; vertical-align: top; }
+  table.attrs th { background: #2D2D2D; color: #DBEDD8; }
+  table.attrs td:first-child { color: #51DBCF; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>rect-weave</h1>
+  <p class="lead">裝飾用的矩形交織圖。只用水平線與垂直線，轉角一律直角；矩形大小不一（不會有兩個同尺寸），彼此穿過、相連成一團，由亂數生成。寫上 <code>seed</code> 就能固定成同一張圖，錄影重來也一樣。</p>
+
+  <section class="sec" data-demo>
+    <h2>1. 基本：點陣上的矩形交織</h2>
+    <p class="desc">指定寬高與矩形數量，<code>show-grid</code> 畫出背景點陣。這個範例寫了 <code>seed</code>，每次重新整理都是同一張。</p>
+    <div class="cmp">
+      <div class="stage"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave width="360" height="420" count="13" seed="1125" show-grid></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>2. 交織與多色</h2>
+    <p class="desc"><code>weave</code> 讓交叉的地方一上一下，像編織。<code>color</code> 用逗號寫多個顏色，每個矩形輪流使用。</p>
+    <div class="cmp">
+      <div class="stage"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave width="420" height="360" count="12" seed="88" weave line-width="5"
+            color="key, yellow, pink"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>3. 形狀與鬆緊</h2>
+    <p class="desc"><code>shape</code> 決定矩形比例；<code>density</code> 越低越鬆散；<code>min-size</code>、<code>max-size</code> 是邊長的格數範圍；<code>line-style</code> 可用虛線或點線。</p>
+    <div class="cmp">
+      <div class="stage"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave width="300" height="300" count="9" seed="7" shape="wide" color="violet"></rect-weave>
+<rect-weave width="300" height="300" count="9" seed="7" shape="tall" color="green"></rect-weave>
+<rect-weave width="300" height="300" count="10" seed="21" density="0.2" grid="20"
+            min-size="3" max-size="9" line-style="dashed" color="salmon"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>4. 每次都不一樣</h2>
+    <p class="desc">不寫 <code>seed</code> 時每次載入都不同，主控台會印出這次的 seed，喜歡的話抄下來固定。按鈕呼叫 <code>regenerate()</code> 重新生成，<code>replay()</code> 重播畫線動畫。</p>
+    <div class="btns">
+      <button type="button" class="nb" id="btn-new">重新生成</button>
+      <button type="button" class="nb" id="btn-replay">重播動畫</button>
+    </div>
+    <div class="cmp">
+      <div class="stage"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave id="rw-random" width="420" height="420" count="15" show-grid color="key, blue"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>5. 違反規則：整張圖不顯示</h2>
+    <p class="desc">第一張的 <code>min-size</code> 大於 <code>max-size</code>，第二張在很小的圖裡要放 38 個大小不一的矩形，放不下，兩張都不顯示，主控台會印出紅字錯誤。</p>
+    <div class="cmp">
+      <div class="stage blank"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave min-size="6" max-size="3"></rect-weave>
+<rect-weave width="200" height="200" count="38" max-size="5"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec">
+    <h2>屬性</h2>
+    <table class="attrs">
+      <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+      <tr><td>width、height</td><td>360、420</td><td>整張圖的寬和高（px）。</td></tr>
+      <tr><td>count</td><td>12</td><td>矩形數量。</td></tr>
+      <tr><td>seed</td><td>隨機</td><td>亂數種子，同一個值每次畫出同一張圖。同 mark-fx。</td></tr>
+      <tr><td>grid</td><td>18</td><td>點陣間距（px），矩形的邊都對齊到格線。</td></tr>
+      <tr><td>show-grid</td><td>關</td><td>畫出背景點陣。同 route-map。</td></tr>
+      <tr><td>grid-color</td><td>#2D2D2D</td><td>點陣的顏色。</td></tr>
+      <tr><td>min-size、max-size</td><td>3、11</td><td>矩形邊長的最小、最大格數。</td></tr>
+      <tr><td>shape</td><td>mix</td><td><code>mix</code> 各種比例混合、<code>wide</code> 多半是橫條、<code>tall</code> 多半是直條、<code>square</code> 接近正方形。</td></tr>
+      <tr><td>density</td><td>0.5</td><td>0 到 1，越高越往中央擠，越低越鬆散。</td></tr>
+      <tr><td>color</td><td>key</td><td>線的顏色；用逗號寫多個時，每個矩形輪流使用。</td></tr>
+      <tr><td>line-width</td><td>3</td><td>線的粗細（px）。同 ui-guide、ui-connect。</td></tr>
+      <tr><td>line-style</td><td>solid</td><td><code>solid</code>、<code>dashed</code>、<code>dotted</code>。同 ui-guide、ui-connect。</td></tr>
+      <tr><td>weave</td><td>關</td><td>交叉的地方一上一下，像編織。</td></tr>
+      <tr><td>draw-speed</td><td>600</td><td>每個矩形畫出來的時間（ms）。同 ui-guide、ui-connect。</td></tr>
+      <tr><td>stagger</td><td>188</td><td>矩形依序出現的間隔（ms）。同 ui-guide、ui-connect。</td></tr>
+      <tr><td>no-animation</td><td>關</td><td>直接顯示，不播放畫線動畫。同 ui-guide、ui-connect。</td></tr>
+    </table>
+    <p class="desc" style="margin-top:16px">方法：<code>regenerate(seed)</code>、<code>replay()</code>。事件：<code>rect-weave:end</code>。轉角一律直角，沒有圓角屬性。</p>
+  </section>
+</div>
+<script>
+  /* 範例頁用：同一份原始碼同時產生預覽與程式碼 */
+  document.querySelectorAll('section[data-demo]').forEach(function (sec) {
+    var src = sec.querySelector('script.demo-src').textContent.replace(/^\n+/, '').replace(/\s+$/, '');
+    sec.querySelector('pre').textContent = src;
+    sec.querySelector('.stage').innerHTML = src;
+  });
+</script>
+<script src="rect-weave.js"></script>
+<script>
+  document.getElementById('btn-new').addEventListener('click', function () { document.getElementById('rw-random').regenerate(); });
+  document.getElementById('btn-replay').addEventListener('click', function () { document.getElementById('rw-random').replay(); });
+</script>
+</body>
+</html>
