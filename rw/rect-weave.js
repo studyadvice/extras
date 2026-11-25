@@ -25,13 +25,24 @@
  *   stagger         矩形依序出現的間隔（ms），預設 188
  *   no-animation    布林：直接顯示，不播放畫線動畫
  *
+ * 圖片（屬性名稱同 ui-cards 的 image）
+ *   image           圖片網址；用逗號寫多張時，分別放進不同的矩形
+ *   image-pick      fit（預設）：挑形狀最接近圖片比例的矩形，裁掉最少；
+ *                   any：在不太細的矩形裡依 seed 任選；
+ *                   center：生成時先依圖片比例放好矩形，第一張在中央附近，其他矩形再圍著長
+ *   image-tone      把圖片轉成單色調，例如 image-tone="key"：暗部是底色 #0C0D0C，亮部是指定的顏色
+ *   圖片不變形，多的部分裁掉；圖片蓋在其他矩形的線上面，自己的邊框畫在圖片上；圖片沒有動畫。
+ *   多張圖片時，放圖片的矩形彼此不重疊（可以貼著邊）；fit、any 找不到不重疊的矩形時才會重疊。
+ *   「不太細」是指短邊至少 3 格、長邊不超過短邊的 2.5 倍（fit 與 any 都只從這些矩形裡挑）。
+ *
  * 方法：regenerate(seed)（重新生成，可給新的 seed）、replay()（重播畫線動畫）
  * 事件：rect-weave:end（畫完）
  *
  * 違反下列任何一條，整張圖不顯示，並在主控台印出紅字錯誤：
  *   width、height、count、grid、min-size、max-size 不是正整數；min-size 大於 max-size；
  *   max-size 超過圖的格數；shape、line-style 的值不在清單裡；density 不在 0 到 1；line-width 不是正數；
- *   draw-speed、stagger 不是數字；矩形太多或圖太小，放不下。
+ *   draw-speed、stagger 不是數字；矩形太多或圖太小，放不下；
+ *   image-pick 的值不在清單裡；圖片比矩形多；圖片載入失敗；適合放圖片的矩形不夠。
  * 不使用 Shadow DOM。
  */
 (() => {
@@ -44,6 +55,7 @@
   const svg = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
   const SHAPES = ['mix', 'wide', 'tall', 'square'];
   const STYLES = ['solid', 'dashed', 'dotted'];
+  const PICKS = ['fit', 'any', 'center'];
 
   /* 亂數：同一個 seed 得到同一串數字 */
   const hashSeed = s => { let h = 2166136261 >>> 0; for (const c of String(s)) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619) >>> 0; } return h; };
@@ -97,8 +109,15 @@ rect-weave svg{display:block;overflow:visible;}
         style: (a('line-style') || 'solid').trim().toLowerCase(),
         colors: (a('color') || 'key').split(',').map(color).filter(Boolean),
         weave: has('weave'), showGrid: has('show-grid'), gridColor: color(a('grid-color') || '#2D2D2D'),
-        anim: !has('no-animation')
+        anim: !has('no-animation'),
+        images: (a('image') || '').split(',').map(x => x.trim()).filter(Boolean),
+        pick: (a('image-pick') || 'fit').trim().toLowerCase(),
+        tone: has('image-tone') ? color(a('image-tone')) : ''
       };
+      if (!PICKS.includes(o.pick)) errs.push('image-pick="' + a('image-pick') + '" 不是可用的值（' + PICKS.join('、') + '）');
+      if (has('image') && !o.images.length) errs.push('image 沒有寫網址');
+      if (o.images.length > o.count) errs.push('圖片有 ' + o.images.length + ' 張，比矩形數量 count（' + o.count + '）多');
+      if (has('image-tone') && !o.tone) errs.push('image-tone 沒有寫顏色');
       if (!SHAPES.includes(o.shape)) errs.push('shape="' + a('shape') + '" 不是可用的值（' + SHAPES.join('、') + '）');
       if (!STYLES.includes(o.style)) errs.push('line-style="' + a('line-style') + '" 不是可用的值（' + STYLES.join('、') + '）');
       if (o.density > 1) errs.push('density="' + a('density') + '" 要在 0 到 1 之間');
@@ -160,13 +179,25 @@ rect-weave svg{display:block;overflow:visible;}
       return { near, same, cross };
     }
 
-    _generate(o, R) {
+    /* image-pick="center"：依圖片比例決定矩形大小，盡量大，但不超過 max-size 與圖的格數 */
+    _sizeFor(o, R, ratio, shrink) {
+      /* 放不下時，每重試幾次就把上限縮小一格 */
+      const maxW = Math.max(o.min, Math.min(o.max, o.cols) - shrink), maxH = Math.max(o.min, Math.min(o.max, o.rows) - shrink);
+      let best = null, bs = Infinity;
+      for (let w = o.min; w <= maxW; w++) for (let h = o.min; h <= maxH; h++) {
+        const sc = Math.abs(Math.log((w / h) / ratio)) * 3 - (w * h) / (maxW * maxH) + R() * 0.18;
+        if (sc < bs) { bs = sc; best = { w, h }; }
+      }
+      return best || { w: o.min, h: o.min };
+    }
+
+    _generate(o, R, ratios) {
       const list = [];
       const cx = o.cols / 2, cy = o.rows / 2, far = Math.hypot(cx, cy) || 1;
       for (let i = 0; i < o.count; i++) {
         let placed = null;
         for (let t = 0; t < 38 && !placed; t++) {
-          const s = this._size(o, R);
+          const s = ratios && i < ratios.length ? this._sizeFor(o, R, ratios[i], Math.floor(t / 3)) : this._size(o, R);
           const cands = [];
           if (!list.length) {
             const c = { x: Math.round(cx - s.w / 2 + (R() - 0.5) * 2), y: Math.round(cy - s.h / 2 + (R() - 0.5) * 2), w: s.w, h: s.h };
@@ -174,8 +205,11 @@ rect-weave svg{display:block;overflow:visible;}
             cands.push(c);
           } else {
             /* 檢查所有可放的位置 */
+            const imgRect = ratios && i < ratios.length;
             for (let x = 0; x <= o.cols - s.w; x++) for (let y = 0; y <= o.rows - s.h; y++) {
               const c = { x, y, w: s.w, h: s.h };
+              /* center：放圖片的矩形彼此不重疊，可以貼著邊 */
+              if (imgRect && list.some(r => this._cover(c, r))) continue;
               if (this._fits(c, list)) cands.push(c);
             }
           }
@@ -198,8 +232,55 @@ rect-weave svg{display:block;overflow:visible;}
 
     _build(seedOverride) {
       this.removeAttribute('data-error');
+      const token = this._token = (this._token || 0) + 1;
       const { o, errs } = this._opts();
       if (errs.length) { this._fail(errs); return; }
+      if (!o.images.length) { this._make(o, seedOverride, []); return; }
+      /* 先讀出每張圖片的大小，才知道比例 */
+      Promise.all(o.images.map(src => new Promise((res, rej) => {
+        const im = new Image();
+        im.onload = () => res({ src, ratio: (im.naturalWidth || 1) / (im.naturalHeight || 1) });
+        im.onerror = () => rej(src);
+        im.src = src;
+      }))).then(imgs => { if (token === this._token) this._make(o, seedOverride, imgs); },
+        src => { if (token === this._token) this._fail(['圖片載入失敗：' + src]); });
+    }
+
+    /* 「不太細」的矩形才適合放圖片 */
+    _okForImage(r) { const s = Math.min(r.w, r.h), l = Math.max(r.w, r.h); return s >= 3 && l <= s * 2.5; }
+
+    _assign(o, list, imgs, R) {
+      if (!imgs.length) return { map: [] };
+      if (o.pick === 'center') return { map: imgs.map((im, i) => ({ rect: i, src: im.src })) };
+      const free = list.map((r, i) => i).filter(i => this._okForImage(list[i]));
+      if (free.length < imgs.length) return { fail: '適合放圖片的矩形只有 ' + free.length + ' 個（短邊至少 3 格、長邊不超過短邊的 2.5 倍），圖片有 ' + imgs.length + ' 張' };
+      const map = [];
+      imgs.forEach(im => {
+        /* 盡量不和已經放了圖片的矩形重疊，避免圖片互相蓋住 */
+        const clear = free.filter(ri => map.every(m => !this._cover(list[ri], list[m.rect])));
+        const pool = clear.length ? clear : free;
+        let pickRi;
+        if (o.pick === 'any') pickRi = pool[Math.floor(R() * pool.length)];
+        else {
+          let bs = Infinity;
+          const big = Math.max(...pool.map(ri => list[ri].w * list[ri].h));
+          pool.forEach(ri => {
+            const r = list[ri];
+            /* 比例越接近越好，比例差不多時挑大的 */
+            const sc = Math.abs(Math.log((r.w / r.h) / im.ratio)) - (r.w * r.h) / big * 0.6;
+            if (sc < bs) { bs = sc; pickRi = ri; }
+          });
+        }
+        map.push({ rect: pickRi, src: im.src });
+        free.splice(free.indexOf(pickRi), 1);
+      });
+      return { map };
+    }
+
+    /* 兩個矩形的內部有沒有重疊（只貼著邊不算） */
+    _cover(a, b) { return a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h; }
+
+    _make(o, seedOverride, imgs) {
       let seed = seedOverride != null ? String(seedOverride) : this.getAttribute('seed');
       if (seed == null || seed === '') {
         seed = String(Math.floor(Math.random() * 900000) + 100000);
@@ -209,13 +290,16 @@ rect-weave svg{display:block;overflow:visible;}
       /* 同一個 seed 放不下時，用同一串亂數整張重來，結果仍然固定 */
       const R = rng(seed);
       let g = null;
-      for (let t = 0; t < 12; t++) { g = this._generate(o, R); if (!g.fail) break; }
+      const ratios = o.pick === 'center' ? imgs.map(im => im.ratio) : null;
+      for (let t = 0; t < 12; t++) { g = this._generate(o, R, ratios); if (!g.fail) break; }
       if (g.fail) { this._fail([g.fail]); return; }
+      const asg = this._assign(o, g.list, imgs, R);
+      if (asg.fail) { this._fail([asg.fail]); return; }
       this._o = o;
-      this._render(o, g.list);
+      this._render(o, g.list, asg.map);
     }
 
-    _render(o, list) {
+    _render(o, list, pics) {
       const G = o.grid, off = G / 2;
       const P = v => off + v * G;
       const root = svg('svg', { width: String(o.w), height: String(o.h), viewBox: '0 0 ' + o.w + ' ' + o.h, 'aria-hidden': 'true' });
@@ -263,8 +347,36 @@ rect-weave svg{display:block;overflow:visible;}
         const g = svg('g', o.anim ? { mask: 'url(#' + did + ')' } : {}, parent);
         const p = svg('path', { d, fill: 'none', stroke: col, 'stroke-width': String(o.lw), 'stroke-linejoin': 'miter', 'stroke-linecap': o.style === 'dotted' ? 'round' : 'square' }, g);
         if (dash) p.setAttribute('stroke-dasharray', dash);
-        return { g, mp, did };
+        return { g, mp, did, d, col, dash };
       });
+
+      /* 圖片：蓋在所有線上面，填滿矩形內側並裁掉多的部分；自己的邊框再畫在圖片上 */
+      if (pics && pics.length) {
+        let filter = '';
+        if (o.tone) {
+          const fid = this._uid + 'tone';
+          const f = svg('filter', { id: fid, 'color-interpolation-filters': 'sRGB' }, defs);
+          svg('feColorMatrix', { type: 'saturate', values: '0' }, f);
+          const ct = svg('feComponentTransfer', {}, f);
+          const hex = h => { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255); };
+          const lo = hex('#0C0D0C'), hi = /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(o.tone) ? hex(o.tone) : [1, 1, 1];
+          ['R', 'G', 'B'].forEach((ch, i) => svg('feFunc' + ch, { type: 'table', tableValues: lo[i].toFixed(3) + ' ' + hi[i].toFixed(3) }, ct));
+          filter = 'url(#' + fid + ')';
+        }
+        const top = svg('g', {}, root);
+        pics.forEach(pc => {
+          const r = list[pc.rect], it = this._items[pc.rect], inset = o.lw / 2;
+          const im = svg('image', {
+            href: pc.src, x: String(P(r.x) + inset), y: String(P(r.y) + inset),
+            width: String(r.w * G - o.lw), height: String(r.h * G - o.lw), preserveAspectRatio: 'xMidYMid slice'
+          }, top);
+          if (filter) im.setAttribute('filter', filter);
+          const fg = svg('g', o.anim ? { mask: 'url(#' + it.did + ')' } : {}, top);
+          const fp = svg('path', { d: it.d, fill: 'none', stroke: it.col, 'stroke-width': String(o.lw), 'stroke-linejoin': 'miter', 'stroke-linecap': o.style === 'dotted' ? 'round' : 'square' }, fg);
+          if (it.dash) fp.setAttribute('stroke-dasharray', it.dash);
+          it.fg = fg;
+        });
+      }
       this.replaceChildren(root);
       this.style.width = o.w + 'px';
       this.style.height = o.h + 'px';
@@ -279,6 +391,7 @@ rect-weave svg{display:block;overflow:visible;}
       this._items.forEach((it, i) => {
         if (it.anim) it.anim.cancel();
         it.g.setAttribute('mask', 'url(#' + it.did + ')');
+        if (it.fg) it.fg.setAttribute('mask', 'url(#' + it.did + ')');
         it.mp.setAttribute('stroke-dashoffset', '1');
         it.anim = it.mp.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: o.speed, delay: i * o.stagger, easing: 'ease-in-out', fill: 'forwards' });
         it.anim.onfinish = () => { it.mp.setAttribute('stroke-dashoffset', '0'); };

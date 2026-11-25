@@ -31,10 +31,61 @@
 <body>
 <div class="page">
   <h1>rect-weave</h1>
-  <p class="lead">裝飾用的矩形交織圖。只用水平線與垂直線，轉角一律直角；矩形大小不一（不會有兩個同尺寸），彼此穿過、相連成一團，由亂數生成。寫上 <code>seed</code> 就能固定成同一張圖，錄影重來也一樣。</p>
+  <p class="lead">裝飾用的矩形交織圖，可以在其中的矩形放圖片。範例越新越上面。只用水平線與垂直線，轉角一律直角；矩形大小不一（不會有兩個同尺寸），彼此穿過、相連成一團，由亂數生成。寫上 <code>seed</code> 就能固定成同一張圖，錄影重來也一樣。</p>
 
   <section class="sec" data-demo>
-    <h2>1. 基本：點陣上的矩形交織</h2>
+    <h2>修訂一 範例 A：放一張圖片（image-pick="fit"，預設）</h2>
+    <p class="desc"><code>image</code> 指定圖片，元件挑形狀最接近圖片比例的矩形放進去。圖片不變形，多的部分裁掉；圖片蓋在其他矩形的線上面，自己的邊框畫在圖片上。圖片沒有動畫。</p>
+    <div class="cmp">
+      <div class="stage"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave width="360" height="420" count="13" seed="1125" show-grid image="demo-sunset.jpg"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>修訂一 範例 B：多張圖片與單色調</h2>
+    <p class="desc">用逗號寫多張，分別放進不同的矩形。<code>image-tone</code> 把圖片轉成單色調：暗部是底色，亮部是指定的顏色。左邊是 <code>image-pick="any"</code>（在不太細的矩形裡任選），右邊是 <code>image-pick="center"</code>（生成時先依圖片比例放好矩形，第一張在中央附近）。</p>
+    <div class="cmp">
+      <div class="stage"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave width="420" height="420" count="13" seed="31" image-pick="any"
+            image="demo-sunset.jpg, demo-city.jpg" image-tone="key"></rect-weave>
+<rect-weave width="420" height="420" count="12" seed="31" image-pick="center" color="yellow"
+            image="demo-city.jpg, demo-dawn.jpg" image-tone="salmon"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>修訂一 範例 C：違反規則</h2>
+    <p class="desc">第一張的圖片網址不存在，第二張的圖片比矩形還多，兩張都不顯示，主控台會印出紅字錯誤。</p>
+    <div class="cmp">
+      <div class="stage blank"></div>
+      <pre></pre>
+    </div>
+    <script type="text/plain" class="demo-src">
+<rect-weave seed="5" image="no-such-file.jpg"></rect-weave>
+<rect-weave seed="5" count="3" image="demo-sunset.jpg, demo-city.jpg, demo-dawn.jpg, demo-sunset.jpg"></rect-weave>
+    </script>
+  </section>
+
+  <section class="sec">
+    <h2>修訂一 修改前後對照</h2>
+<pre>修改前：只有線條
+&lt;rect-weave seed="1125"&gt;&lt;/rect-weave&gt;
+
+修改後：可以放圖片，一張或多張，可轉成單色調
+&lt;rect-weave seed="1125" image="photo.jpg"&gt;&lt;/rect-weave&gt;                          挑最接近圖片比例的矩形
+&lt;rect-weave seed="1125" image="a.jpg, b.jpg" image-pick="any"&gt;&lt;/rect-weave&gt;       在不太細的矩形裡任選
+&lt;rect-weave seed="1125" image="a.jpg" image-pick="center" image-tone="key"&gt;&lt;/rect-weave&gt;</pre>
+  </section>
+
+  <section class="sec" data-demo>
+    <h2>原始範例 1. 基本：點陣上的矩形交織</h2>
     <p class="desc">指定寬高與矩形數量，<code>show-grid</code> 畫出背景點陣。這個範例寫了 <code>seed</code>，每次重新整理都是同一張。</p>
     <div class="cmp">
       <div class="stage"></div>
@@ -46,7 +97,7 @@
   </section>
 
   <section class="sec" data-demo>
-    <h2>2. 交織與多色</h2>
+    <h2>原始範例 2. 交織與多色</h2>
     <p class="desc"><code>weave</code> 讓交叉的地方一上一下，像編織。<code>color</code> 用逗號寫多個顏色，每個矩形輪流使用。</p>
     <div class="cmp">
       <div class="stage"></div>
@@ -59,7 +110,7 @@
   </section>
 
   <section class="sec" data-demo>
-    <h2>3. 形狀與鬆緊</h2>
+    <h2>原始範例 3. 形狀與鬆緊</h2>
     <p class="desc"><code>shape</code> 決定矩形比例；<code>density</code> 越低越鬆散；<code>min-size</code>、<code>max-size</code> 是邊長的格數範圍；<code>line-style</code> 可用虛線或點線。</p>
     <div class="cmp">
       <div class="stage"></div>
@@ -74,7 +125,7 @@
   </section>
 
   <section class="sec" data-demo>
-    <h2>4. 每次都不一樣</h2>
+    <h2>原始範例 4. 每次都不一樣</h2>
     <p class="desc">不寫 <code>seed</code> 時每次載入都不同，主控台會印出這次的 seed，喜歡的話抄下來固定。按鈕呼叫 <code>regenerate()</code> 重新生成，<code>replay()</code> 重播畫線動畫。</p>
     <div class="btns">
       <button type="button" class="nb" id="btn-new">重新生成</button>
@@ -90,7 +141,7 @@
   </section>
 
   <section class="sec" data-demo>
-    <h2>5. 違反規則：整張圖不顯示</h2>
+    <h2>原始範例 5. 違反規則：整張圖不顯示</h2>
     <p class="desc">第一張的 <code>min-size</code> 大於 <code>max-size</code>，第二張在很小的圖裡要放 38 個大小不一的矩形，放不下，兩張都不顯示，主控台會印出紅字錯誤。</p>
     <div class="cmp">
       <div class="stage blank"></div>
@@ -122,6 +173,9 @@
       <tr><td>draw-speed</td><td>600</td><td>每個矩形畫出來的時間（ms）。同 ui-guide、ui-connect。</td></tr>
       <tr><td>stagger</td><td>188</td><td>矩形依序出現的間隔（ms）。同 ui-guide、ui-connect。</td></tr>
       <tr><td>no-animation</td><td>關</td><td>直接顯示，不播放畫線動畫。同 ui-guide、ui-connect。</td></tr>
+      <tr><td>image</td><td>無</td><td>圖片網址；用逗號寫多張時，分別放進不同的矩形。同 ui-cards。</td></tr>
+      <tr><td>image-pick</td><td>fit</td><td><code>fit</code> 挑形狀最接近圖片比例的矩形；<code>any</code> 在不太細的矩形裡任選；<code>center</code> 生成時先依圖片比例放好矩形，第一張在中央附近。</td></tr>
+      <tr><td>image-tone</td><td>無</td><td>把圖片轉成單色調，暗部是底色 #0C0D0C，亮部是指定的顏色。</td></tr>
     </table>
     <p class="desc" style="margin-top:16px">方法：<code>regenerate(seed)</code>、<code>replay()</code>。事件：<code>rect-weave:end</code>。轉角一律直角，沒有圓角屬性。</p>
   </section>

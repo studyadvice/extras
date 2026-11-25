@@ -1,11 +1,12 @@
 # rect-weave
 
-`<rect-weave>` 是裝飾用的矩形交織圖。只用水平線與垂直線，轉角一律直角；矩形大小不一，彼此穿過、相連成一團，由亂數生成。寫上 `seed` 就能固定成同一張圖，錄影重來也一樣。元件不使用 Shadow DOM，不需要任何外部資源，離線也能用。
+`<rect-weave>` 是裝飾用的矩形交織圖。只用水平線與垂直線，轉角一律直角；矩形大小不一，彼此穿過、相連成一團，由亂數生成。寫上 `seed` 就能固定成同一張圖，錄影重來也一樣。也可以在其中的矩形放圖片。元件不使用 Shadow DOM，不需要任何外部資源，離線也能用。
 
 | 檔案 | 標籤 | 用途 |
 | --- | --- | --- |
 | `rect-weave.js` | `<rect-weave>` | 矩形交織圖。 |
-| `rect-weave-demo-11-25-26.html` | | 範例：基本、交織與多色、形狀與鬆緊、每次都不一樣、違反規則。 |
+| `rect-weave-demo-11-25-26.html` | | 範例（越新越上面）：放圖片、多張圖片與單色調、基本、交織與多色、形狀與鬆緊、每次都不一樣、違反規則。 |
+| `demo-sunset.jpg`、`demo-city.jpg`、`demo-dawn.jpg` | | 範例頁用的圖片。 |
 
 ## 快速開始
 
@@ -37,6 +38,32 @@
 | `no-animation` | 關 | 直接顯示，不播放畫線動畫。 |
 
 轉角一律直角，沒有圓角屬性。
+
+## 圖片
+
+| 屬性 | 預設 | 說明 |
+| --- | --- | --- |
+| `image` | 無 | 圖片網址；用逗號寫多張時，分別放進不同的矩形。名稱同 ui-cards。 |
+| `image-pick` | `fit` | 選哪個矩形放圖片，見下表。 |
+| `image-tone` | 無 | 把圖片轉成單色調，例如 `image-tone="key"`：暗部是底色 `#0C0D0C`，亮部是指定的顏色。 |
+
+| `image-pick` | 做法 |
+| --- | --- |
+| `fit` | 挑形狀最接近圖片比例的矩形，裁掉最少；比例差不多時挑大的。 |
+| `any` | 在不太細的矩形裡依 seed 任選。 |
+| `center` | 生成時先依圖片比例放好矩形，第一張在中央附近，其他矩形再圍著長。比例最準。 |
+
+- 「不太細」是指短邊至少 3 格、長邊不超過短邊的 2.5 倍；`fit` 與 `any` 都只從這些矩形裡挑。
+- 圖片不變形，多的部分裁掉。
+- 多張圖片時，放圖片的矩形彼此不重疊（可以貼著邊），圖片不會互相蓋住。`fit`、`any` 真的找不到不重疊的矩形時才會重疊。
+- 圖片蓋在其他矩形的線上面，放圖片的矩形自己的邊框畫在圖片上。
+- 圖片沒有動畫，邊框照常依序畫出。
+- 圖片要先載入才知道比例，所以有圖片時整張圖會等圖片都載入後才出現。
+
+```html
+<rect-weave seed="1125" image="photo.jpg"></rect-weave>
+<rect-weave seed="1125" image="a.jpg, b.jpg" image-pick="any" image-tone="key"></rect-weave>
+```
 
 屬性名稱沿用 studyadvice 其他元件：`color`、`line-width`、`line-style`、`draw-speed`、`stagger`、`no-animation` 同 ui-guide 與 ui-connect，`seed` 同 mark-fx，`show-grid` 同 route-map。
 
@@ -71,6 +98,10 @@
 | `shape`、`line-style` 的值不在清單裡 |
 | `density` 不在 0 到 1 之間；`line-width` 不是正數；`draw-speed`、`stagger` 不是數字 |
 | 矩形太多或圖太小，重試後仍放不下 |
+| `image-pick` 的值不在清單裡；`image` 或 `image-tone` 沒有寫值 |
+| 圖片比 `count` 多 |
+| 圖片載入失敗 |
+| 適合放圖片的矩形（不太細的）比圖片少 |
 
 ## 授權
 
