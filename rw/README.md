@@ -65,8 +65,6 @@
 <rect-weave seed="1125" image="a.jpg, b.jpg" image-pick="any" image-tone="key"></rect-weave>
 ```
 
-屬性名稱沿用 studyadvice 其他元件：`color`、`line-width`、`line-style`、`draw-speed`、`stagger`、`no-animation` 同 ui-guide 與 ui-connect，`seed` 同 mark-fx，`show-grid` 同 route-map。
-
 ## 生成方式
 
 1. 依 `width`、`height`、`grid` 算出點陣格數。
