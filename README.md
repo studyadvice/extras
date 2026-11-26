@@ -2,7 +2,6 @@
 
 教學網頁用的獨立特效元件。每個元件都是單一 `.js` 檔，載入後自動注入樣式，不使用 Shadow DOM，不需要任何外部資源，離線也能用。顏色屬性都可以直接寫色票名稱（例如 `key`、`bg-alternative`），也可以寫任何 CSS 顏色。
 
-可以和 [studyadvice/ielts](https://github.com/studyadvice/ielts) 的元件一起使用（例如用 `<link-when>` 串接），但不依賴它們。
 
 | 資料夾 | 檔案 | 標籤 | 用途 | 說明 | 範例頁 |
 | --- | --- | --- | --- | --- | --- |
@@ -21,8 +20,6 @@
 
 <script src="https://cdn.jsdelivr.net/gh/studyadvice/extras@v1.3/chest/treasure-chest.js"></script>
 ```
-
-離線使用時，下載 `.js` 檔放在網頁旁邊，改成 `<script src="treasure-chest.js"></script>` 即可。
 
 ## 色票
 
