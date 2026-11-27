@@ -2,6 +2,7 @@
    收件匣先顯示既有郵件，鈴鐺搖晃、未讀數加一，新郵件從列表頂端滑入並亮起，可加右上角通知卡；
    可選擇讓游標移過去點開新郵件，展開閱讀窗格。完結後可顯示或刪除指定元素，並支援 link-when。
    左側欄有 narrow、medium、wide、none 四種寬度；骨架列自動補滿時可用 filler-max 限制上限。
+   信件內文可以放按鈕與 ui-btn：開信時內文是搬進閱讀窗格，不是複製；reset() 時一併呼叫 UiBtn.reset() 還原。
    語意標籤：<inbox-arrival> <inbox-mail>
    單一檔案，CSS 內建，不使用 Shadow DOM，不需要任何外部資源，離線也能用。顏色一律實色，不使用透明度。
    畫面是自創的通用郵件程式，不模仿任何真實產品。 */
@@ -172,6 +173,7 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
     disconnectedCallback() {
       if (this._io) this._io.disconnect();
       this._runId = (this._runId || 0) + 1; clearTimeout(this._toastT);
+      this._park();
     }
 
     _opt() {
@@ -195,15 +197,23 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
       };
     }
 
-    /* 讀取 <inbox-mail>：沒有 new 的是既有郵件，有 new 的依原始碼順序抵達 */
+    /* 讀取 <inbox-mail>：沒有 new 的是既有郵件，有 new 的依原始碼順序抵達。
+       內文不複製，開信時把 <inbox-mail> 裡的節點整批搬進閱讀窗格，關信時再搬回來，
+       所以裡面的 ui-btn 等元件、id、點擊處理與狀態都保持同一份 */
     _mails() {
       const on = (m, n) => m.hasAttribute(n) && m.getAttribute(n) !== 'false';
+      /* 列表的灰色摘要只取文字，略過按鈕等互動元素 */
+      const plain = m => {
+        const c = m.cloneNode(true);
+        c.querySelectorAll('ui-btn, .ubtn-wrap, button, script, style, template').forEach(x => x.remove());
+        return c.textContent.replace(/\s+/g, ' ').trim();
+      };
       const list = [...this.querySelectorAll(':scope > inbox-mail')].map(m => {
         const isNew = on(m, 'new'), att = m.getAttribute('attach');
         return {
           isNew, from: m.getAttribute('from') || '寄件人', email: m.getAttribute('email') || '',
           subject: m.getAttribute('subject') || '（無主旨）', time: m.getAttribute('time') || (isNew ? '剛剛' : ''),
-          html: m.innerHTML.trim(), text: m.textContent.replace(/\s+/g, ' ').trim(),
+          el: m, text: plain(m),
           unread: isNew || on(m, 'unread'), star: on(m, 'star'),
           attach: att === null || att === 'false' ? '' : (att.trim() && att !== 'true' ? att.trim() : '附件'),
           color: color(m.getAttribute('color'))
@@ -211,7 +221,7 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
       });
       if (!list.some(m => m.isNew)) {
         console.warn('[inbox-arrival] 沒有加上 new 的 <inbox-mail>，改用一封預設的新郵件');
-        list.push({ isNew: true, from: '系統通知', email: '', subject: '你有一封新郵件', time: '剛剛', html: '', text: '', unread: true, star: false, attach: '', color: '' });
+        list.push({ isNew: true, from: '系統通知', email: '', subject: '你有一封新郵件', time: '剛剛', el: null, text: '', unread: true, star: false, attach: '', color: '' });
       }
       return list;
     }
@@ -399,16 +409,35 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
         if (row.classList.contains('ia-unread')) { row.classList.remove('ia-unread'); this._unread = Math.max(0, this._unread - 1); this._counts(); }
         row.classList.add('ia-sel');
       }
-      const body = m.html || (m.text ? esc(m.text) : '<span style="color:var(--ia-dim)">（沒有內文）</span>');
+      /* 先把上一封的內文搬回去，再畫這一封 */
+      this._park();
       this.read.innerHTML = `<div class="ia-r-x">關閉</div><div class="ia-r-sub">${esc(m.subject)}</div>
 <div class="ia-r-meta">${this._av(m)}<div class="ia-r-who"><b>${esc(m.from)}</b>${m.email ? ` &lt;${esc(m.email)}&gt;` : ''}<small>寄給 ${esc(this._o.user)}</small></div><div class="ia-r-time">${esc(m.time)}</div></div>
-<div class="ia-r-body">${body}</div>${m.attach ? `<div class="ia-r-att">${I.clip}<span>${esc(m.attach)}</span></div>` : ''}`;
+<div class="ia-r-body"></div>${m.attach ? `<div class="ia-r-att">${I.clip}<span>${esc(m.attach)}</span></div>` : ''}`;
+      const body = this.read.querySelector('.ia-r-body');
+      const has = m.el && [...m.el.childNodes].some(n => n.nodeType === 1 || n.textContent.trim());
+      if (has) {
+        while (m.el.firstChild) body.append(m.el.firstChild);
+        this._shown = { owner: m.el, body };
+      } else {
+        body.innerHTML = '<span style="color:var(--ia-dim)">（沒有內文）</span>';
+      }
       this.read.scrollTop = 0;
       this.read.classList.add('on');
     }
     _closeMail() {
       this.read.classList.remove('on');
       this.list.querySelectorAll('.ia-sel').forEach(r => r.classList.remove('ia-sel'));
+      /* 等窗格滑出去之後，才把內文搬回 <inbox-mail> */
+      clearTimeout(this._parkT);
+      this._parkT = setTimeout(() => { if (!this.read.classList.contains('on')) this._park(); }, 588);
+    }
+    /* 把閱讀窗格裡的內文搬回原本的 <inbox-mail>，順序不變 */
+    _park() {
+      clearTimeout(this._parkT);
+      const s = this._shown; if (!s) return;
+      while (s.body.firstChild) s.owner.append(s.body.firstChild);
+      this._shown = null;
     }
 
     _finish() {
@@ -433,6 +462,9 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
     reset() {
       if (!this._o) return;
       this._runId++; clearTimeout(this._toastT);
+      /* 重畫前先搬回內文，否則會跟著畫面一起被清掉；再請 ui-btn 回到初始狀態 */
+      this._park();
+      if (window.UiBtn && typeof window.UiBtn.reset === 'function') window.UiBtn.reset(this);
       this._undoTargets();
       this.state = 'ready';
       this._render();

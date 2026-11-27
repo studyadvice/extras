@@ -52,6 +52,7 @@
     <a href="#flow">動畫流程</a>
     <a href="#attrs">inbox-arrival 屬性</a>
     <a href="#mail-attrs">inbox-mail 屬性</a>
+    <a href="#buttons">信件內放按鈕</a>
     <a href="#colors">配色</a>
     <a href="#targets">完結後顯示或刪除元素</a>
     <a href="#lw">搭配 link-when</a>
@@ -149,6 +150,25 @@
     </table>
     <p>標籤之間的內容就是信件內文，可以寫任何 HTML（例如多個 <code>&lt;p&gt;</code>）。列表上顯示的是去掉標籤後的純文字摘要，閱讀窗格顯示完整內容。</p>
 
+    <h2 id="buttons">信件內放按鈕與 ui-btn</h2>
+    <p>內文可以放一般按鈕、連結，也可以放 <a href="https://github.com/studyadvice/open">studyadvice/open</a> 的 <code>&lt;ui-btn&gt;</code>（<code>ui-plus.js</code>）。兩支檔案誰先載入都可以。</p>
+    <pre><code>&lt;inbox-mail new from="王老師" subject="Part 2 題卡與提示"&gt;
+  &lt;p&gt;這週的題卡：Describe a place you would like to visit.&lt;/p&gt;
+  &lt;ui-btn theme="yellow" chevron label-open="收起提示"&gt;看提示&lt;/ui-btn&gt;
+  &lt;div hidden&gt;先說地點和原因，再描述你想做的事。&lt;/div&gt;
+  &lt;ui-btn theme="key" target="open-area" remove-targets="lock-area"&gt;解鎖練習區&lt;/ui-btn&gt;
+&lt;/inbox-mail&gt;
+
+&lt;script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/ui-plus.js"&gt;&lt;/script&gt;
+&lt;script src="inbox-arrival.js"&gt;&lt;/script&gt;</code></pre>
+    <ul>
+      <li>開信時，內文是從 <code>&lt;inbox-mail&gt;</code> 整批搬進閱讀窗格，不是複製；關信或改看別封時再搬回去。所以頁面上永遠只有一份內容，<code>id</code> 不會重複，按鈕的 <code>target</code> 寫在信裡或信外都可以。</li>
+      <li>同一場播放中，關掉信件再打開，按鈕會維持上次的狀態，例如展開過的提示仍然是展開的。</li>
+      <li>重播或呼叫 <code>reset()</code> 時，信件裡的 ui-btn 會一起回到初始狀態：展開過的收回、<code>remove-targets</code> 刪掉的元素放回原位。這需要新版 <code>ui-plus.js</code>（有 <code>UiBtn.reset()</code>）；沒載入 ui-plus 時自動略過。</li>
+      <li>列表的灰色摘要只取文字，按鈕上的字不會出現在摘要裡。</li>
+      <li>畫面是整張等比縮放，按鈕也會跟著縮放，大小請以 960 寬的畫面為準。</li>
+    </ul>
+
     <h2 id="colors">配色</h2>
     <table>
       <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
@@ -173,7 +193,7 @@
       <li>寫法：用逗號分隔；只寫 id 可以省略 <code>#</code>，也可以寫選擇器，例如 <code>.tip</code>、<code>#box p</code>。找不到的項目會在主控台提醒。</li>
       <li>顯示：拿掉 <code>hidden</code>、<code>bp-hidden</code>、<code>d-none</code>，清掉 <code>display:none</code>，並往上浮現；CSS 本身設為 <code>display:none</code> 的元素會改成 <code>display:block</code>。</li>
       <li>刪除：從頁面移除。</li>
-      <li>重播時，顯示過的再藏起來，刪除過的放回原來的位置。</li>
+      <li>重播時，顯示過的再藏起來，刪除過的放回原來的位置。信件裡 ui-btn 影響過的元素也會一起還原。</li>
       <li>規則和 treasure-chest、cycling-sprint 相同。</li>
     </ul>
 

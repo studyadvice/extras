@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>inbox-arrival 範例</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 <style>
   :root {
     --bg: #0C0D0C; --alt: #2D2D2D; --shell: #C6C7BD; --vanilla: #DBEDD8; --yellow: #E3D322; --blue: #5DBAE8;
@@ -83,6 +84,35 @@
 
 修改後：sidebar 可選 narrow、medium、wide、none；filler-max 限制 auto 最多補幾列
 &lt;inbox-arrival sidebar="narrow" filler-max="2"&gt;</code></pre>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>範例 8：信件內放 ui-btn</h2>
+    <p class="desc">信件內文可以放 open repo 的 <code>&lt;ui-btn&gt;</code>。開信時內文是搬進閱讀窗格，不是複製，所以 <code>id</code> 只有一份、按鈕一定按得動；關掉信件再打開，按鈕維持上次的狀態。按「再收一次」或上方的「重來」，信件裡的按鈕和它們影響過的元素一起回到起點，「解鎖練習區」刪掉的鎖也會放回來。這個範例要連網載入 open repo 的 <code>ui-plus.js</code>。</p>
+    <div class="btns"><button type="button" data-reset="#btn-demo">重來</button></div>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival id="btn-demo" cursor replay>
+  <inbox-mail from="教務處" subject="期末報告繳交方式" time="昨天">請上傳 PDF 至課程平台。</inbox-mail>
+  <inbox-mail new from="王老師" subject="Part 2 題卡與提示" attach="cue-card.pdf">
+    <p>這週的題卡：Describe a place you would like to visit.</p>
+    <ui-btn icon="bi-lightbulb" icon-active="bi-lightbulb-fill" theme="yellow" chevron label-open="收起提示">看提示</ui-btn>
+    <div hidden><p style="margin:12px 0 0 0">先說地點和原因，再描述你想在那裡做的事。</p></div>
+    <p style="margin:18px 0 0 0"><ui-btn icon="bi-unlock" theme="key" target="ib-open" remove-targets="ib-lock">解鎖練習區</ui-btn></p>
+  </inbox-mail>
+</inbox-arrival>
+<div id="ib-lock" class="lock">練習區尚未解鎖：請在信裡按「解鎖練習區」。</div>
+<div id="ib-open" class="unlock" hidden><b>練習區</b>　開始錄音前，先計時一分鐘準備。</div>
+    </script>
+    <p class="pair-label" style="margin:16px 0 8px 0">修改前後對照</p>
+    <pre class="code"><code>修改前：開信時複製內文，ui-btn 看不到或按不動，id 會重複，重播時刪掉的元素回不來
+this.read.innerHTML = `... &lt;div class="ia-r-body"&gt;${m.html}&lt;/div&gt; ...`;
+
+修改後：開信時把 &lt;inbox-mail&gt; 的節點搬進閱讀窗格，關信時搬回；reset() 一併呼叫 UiBtn.reset(this)
+while (m.el.firstChild) body.append(m.el.firstChild);</code></pre>
   </section>
 
   <section class="demo" data-demo>
@@ -250,6 +280,7 @@ document.addEventListener('inbox-arrival:done', e => {
 </script>
 <script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/flow/ui-stream.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/lw/link-when.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/ui-plus.js"></script>
 <script src="inbox-arrival.js"></script>
 </body>
 </html>
