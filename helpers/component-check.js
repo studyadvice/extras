@@ -41,6 +41,7 @@
     'flow/ui-stream-beyond.js': {'r':'u','o':[],'d':[],'g':['UiStreamBeyond']},
     'flow/ui-stream.js': {'r':'u','o':['stream-item','stream-role','ui-stream'],'d':['stream-item','stream-role','ui-stream'],'g':['UiStream']},
     'guide/ui-guide.js': {'r':'u','o':['guide-mark','ui-guide'],'d':['guide-mark','ui-guide'],'g':[]},
+    'ibx/ui-inbox.js': {'r':'u','o':['inbox-attach','inbox-folder','inbox-item','ui-inbox'],'d':['inbox-attach','inbox-folder','inbox-item','ui-inbox'],'g':['UiInbox']},
     'info/info-region.js': {'r':'u','o':['info-region','info-region-group','ir-choice','ir-choices','ir-input'],'d':['info-region','info-region-group','ir-choice','ir-choices','ir-input'],'g':['InfoRegion','InfoRegionConfig']},
     'ladder/ui-detail-ladder.js': {'r':'u','o':['ladder-step','step-body','step-note','step-title','ui-detail-ladder'],'d':['ui-detail-ladder'],'g':[]},
     'ladder/ui-insight.js': {'r':'u','o':['ins-line','ui-insight'],'d':['ui-insight'],'g':[]},
