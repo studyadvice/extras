@@ -18,6 +18,11 @@
      d：這個檔案會註冊的自訂元素（用來判斷是否成功執行）
      g：這個檔案會建立的全域物件（沒有註冊自訂元素時用來判斷是否成功執行） */
   var T = {
+    'chest/cycling-sprint.js': {'r':'x','o':['cycling-sprint','sprint-result'],'d':['cycling-sprint','sprint-result'],'g':['CyclingSprint']},
+    'chest/treasure-chest.js': {'r':'x','o':['chest-prize','treasure-chest'],'d':['chest-prize','treasure-chest'],'g':['TreasureChest']},
+    'chest/ui-opener.js': {'r':'x','o':['ui-opener'],'d':['ui-opener'],'g':['UiOpener']},
+    'rw/rect-weave.js': {'r':'x','o':['rect-weave'],'d':['rect-weave'],'g':['RectWeave']},
+    'ui-slice/ui-slice.js': {'r':'x','o':['ui-cut','ui-slice'],'d':['ui-slice'],'g':[]},
     'arrow-flow.js': {'r':'u','o':['arrow-flow','branch-option','flow-branch','flow-step'],'d':['arrow-flow','branch-option','flow-branch','flow-step'],'g':['ArrowFlow']},
     'bd/badge-targets.js': {'r':'u','o':[],'d':[],'g':['BadgeTargets']},
     'bd/card-badge.js': {'r':'u','o':['badge-item','card-badge'],'d':['badge-item','card-badge'],'g':[]},
@@ -74,18 +79,16 @@
     'tl/ui-timeline.js': {'r':'u','o':['tl-item','ui-timeline'],'d':['ui-timeline'],'g':[]},
     'tour/page-tour.js': {'r':'u','o':['fx-arrow','fx-confetti','fx-count','fx-cursor','fx-hover','fx-line','fx-mark','fx-note','fx-punch','fx-ring','fx-shake','page-tour','tour-panel','tour-step','tour-world'],'d':['page-tour','tour-panel','tour-step','tour-world'],'g':['PageTour']},
     'tour/route-map.js': {'r':'u','o':['route-here','route-line','route-map','route-stop','route-train','route-transfer','route-zone'],'d':['route-here','route-line','route-map','route-stop','route-train','route-transfer','route-zone'],'g':['RouteMap']},
+    'ui-bank.js': {'r':'u','o':['extra-info','q-answer','q-bank','q-explain','q-item','q-prompt','q-wrong'],'d':['q-bank'],'g':['UiBank']},
     'ui-fillin.js': {'r':'u','o':['ans-box','main-box','ui-fillin'],'d':['ans-box','main-box','ui-fillin'],'g':[]},
     'ui-frame.js': {'r':'u','o':['ui-frame'],'d':['ui-frame'],'g':['UiFrame']},
     'ui-inputs.js': {'r':'u','o':['cli-ask','cli-in','cli-out','cli-wait','ui-blank','ui-otp'],'d':['ui-blank','ui-otp'],'g':[]},
+    'ui-match.js': {'r':'u','o':['ui-match'],'d':['ui-match'],'g':[]},
     'ui-plus.js': {'r':'u','o':['chalk-mark','col-pair','dual-hr','dual-vr','read-pulse','ui-arc-item','ui-arc-menu','ui-btn'],'d':['dual-hr','dual-vr','ui-arc-item','ui-arc-menu'],'g':['DualHR','DualLine','DualVR','UiBtn','UiBtnConfig','UiReading','UiReadingConfig']},
     'ui-tabs.js': {'r':'u','o':['tab-item','ui-tabs'],'d':['ui-tabs'],'g':['UiTabs']},
+    'ui-toast-beyond.js': {'r':'u','o':['ui-toast-panel'],'d':['ui-toast-panel'],'g':['UiToastBeyond']},
     'ui-toast.js': {'r':'u','o':['ui-toast'],'d':[],'g':['UiToast','UiToastConfig']},
-    'vt/v-title.js': {'r':'u','o':['v-title'],'d':['v-title'],'g':['VTitle']},
-    'chest/cycling-sprint.js': {'r':'x','o':['cycling-sprint','sprint-result'],'d':['cycling-sprint','sprint-result'],'g':['CyclingSprint']},
-    'chest/treasure-chest.js': {'r':'x','o':['chest-prize','treasure-chest'],'d':['chest-prize','treasure-chest'],'g':['TreasureChest']},
-    'chest/ui-opener.js': {'r':'x','o':['ui-opener'],'d':['ui-opener'],'g':['UiOpener']},
-    'rw/rect-weave.js': {'r':'x','o':['rect-weave'],'d':['rect-weave'],'g':['RectWeave']},
-    'ui-slice/ui-slice.js': {'r':'x','o':['ui-cut','ui-slice'],'d':['ui-slice'],'g':[]}
+    'vt/v-title.js': {'r':'u','o':['v-title'],'d':['v-title'],'g':['VTitle']}
   };
   /* 多個檔案都能處理的標籤：載入其中任何一個就不算缺 */
   var SHARED = {'mark-fx':['bp-stepper.js','flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','ladder/ui-detail-ladder.js','layout/ui-cards.js','layout/ui-drill.js','post/ui-post.js','tbl/ui-table.js','tfx/text-fx.js','vt/v-title.js'],'note-fx':['flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','post/ui-post.js','tfx/text-fx.js','vt/v-title.js'],'remove-fx':['flow/ui-play.js','flow/ui-stream.js','post/ui-post.js'],'shake-fx':['flow/ui-play.js','tfx/text-fx.js'],'show-fx':['flow/play-maker.js','flow/ui-play.js'],'stamp-fx':['flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','post/ui-post.js'],'swap-fx':['flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','post/ui-post.js','tfx/text-fx.js'],'ui-flash':['tbl/ui-table.js','vt/v-title.js'],'ui-trans':['tbl/ui-table.js','vt/v-title.js'],'zoom-fx':['flow/ui-play.js','tfx/text-fx.js']};
@@ -96,7 +99,7 @@
 
   /* 靠屬性啟動的檔案：頁面有符合的元素，就需要載入，也算有用到 */
   var ATTR = {
-    'ui-frame.js': 'template[frame], card-detail[frame], card-back[frame]',
+    'ui-frame.js': 'template[frame], card-detail[frame], card-back[frame], ui-toast-panel[frame]',
     'ui-toast.js': '[toast], [toast-target]',
     'bd/badge-targets.js': '[badge-reveal-targets], [badge-remove-targets], [badge-wait-end]',
     'note/bp-popnote.js': '[data-popover-target], [data-popover-content], [data-popover-title]',
@@ -108,7 +111,7 @@
   };
   /* 屬性對應的說明文字 */
   var ATTR_NOTE = {
-    'ui-frame.js': '寫了 frame 的 template、card-detail 或 card-back',
+    'ui-frame.js': '寫了 frame 的 template、card-detail、card-back 或 ui-toast-panel',
     'ui-toast.js': 'toast 或 toast-target 屬性',
     'bd/badge-targets.js': 'badge-reveal-targets、badge-remove-targets 或 badge-wait-end 屬性',
     'note/bp-popnote.js': 'data-popover-* 屬性',
@@ -124,7 +127,9 @@
     'post/ui-post-beyond.js': [['post/ui-post.js']],
     'flow/ui-stream-beyond.js': [['flow/ui-stream.js']],
     'editor/md-editor-beyond.js': [['editor/md-editor.js']],
-    'bd/badge-targets.js': [['flow/ui-stream.js', 'post/ui-post.js', 'guide/ui-guide.js']]
+    'bd/badge-targets.js': [['flow/ui-stream.js', 'post/ui-post.js', 'guide/ui-guide.js']],
+    'ui-match.js': [['ui-bank.js']],
+    'ui-toast-beyond.js': [['ui-toast.js']]
   };
   /* 載入順序：[先, 後, 條件]。後 寫 * 表示其他所有元件檔；條件省略表示一律檢查 */
   var ORDER = [
