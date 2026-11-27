@@ -9,6 +9,7 @@
 | `chest/` | `cycling-sprint.js` | `<cycling-sprint>` `<sprint-result>` | 單車選手衝刺終點動畫：起步、加速、撞斷終點彩帶、彩紙噴出、舉手歡呼，最後顯示成績；背景有視差捲動的山景與看台，可加 0 到 2 位對手。 | 見 [`cycling-sprint.js`](chest/cycling-sprint.js) 開頭註解 | [`cycling-sprint-demo-11-18-26.html`](chest/cycling-sprint-demo-11-18-26.html) |
 | `chest/` | `ui-opener.js` | `<ui-opener>` | 課程片頭動畫：夜間城市與高架捷運。 | 見 [`ui-opener.js`](chest/ui-opener.js) 開頭註解 | [`ui-opener-demo-11-19-26.html`](chest/ui-opener-demo-11-19-26.html) |
 | `ui-slice/` | `ui-slice.js` | `<ui-slice>` `<ui-cut>` | 斜線分割拼貼：用斜線把矩形切成多個區域，每個區域放一張圖片；支援直線與模擬手繪線。 | [ui-slice/README.md](ui-slice/README.md) | [`ui-slice-demo-11-24-26.html`](ui-slice/ui-slice-demo-11-24-26.html) |
+| `helpers/` | `component-check.js` | 無（用書籤執行） | 錄影前的元件載入檢查：應載入卻沒載入、載入了卻沒用到、重複載入、載入失敗、載入順序，結果顯示在頁面最頂端。 | [helpers/README.md](helpers/README.md) | [`component-check-demo-11-27-26.html`](helpers/component-check-demo-11-27-26.html) |
 | `rw/` | `rect-weave.js` | `<rect-weave>` | 矩形交織裝飾圖：只用水平與垂直線，大小不一的矩形彼此穿過、相連成一團，亂數生成，可用 seed 固定。 | [rw/README.md](rw/README.md) | [`rect-weave-demo-11-25-26.html`](rw/rect-weave-demo-11-25-26.html) |
 
 ## 使用方式

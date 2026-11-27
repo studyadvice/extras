@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>component-check 範例</title>
+<style>
+  :root {
+    --bg: #0C0D0C; --alt: #2D2D2D; --shell: #C6C7BD; --vanilla: #DBEDD8; --yellow: #E3D322; --blue: #5DBAE8;
+    --gray: #86877F; --line: #3B2A20; --key: #51DBCF; --urgent: #FF2E63; --green: #71CD76;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--shell); }
+  body { font-family: "微軟正黑體", "Inter", sans-serif; font-size: 1rem; margin: 0; min-width: 988px; }
+  .page { max-width: 1680px; margin: 0 auto; padding: 32px 50px 80px 50px; }
+  h1 { color: var(--vanilla); font-size: 2rem; font-weight: 700; margin: 0 0 8px 0; }
+  .lead-note { color: var(--gray); margin: 0 0 28px 0; line-height: 1.7; }
+  code { color: var(--yellow); background: transparent; font-family: Consolas, ui-monospace, monospace; }
+  .part { color: var(--blue); font-size: 1.1rem; margin: 36px 0 12px 0; padding: 0 0 8px 0; border-bottom: 1px solid var(--line); }
+  .demo { border: 1px solid var(--line); border-radius: 10px; padding: 28px; margin: 0 0 28px 0; background: #121312; }
+  .demo h2 { font-size: 1.35rem; color: var(--blue); margin: 0 0 6px 0; }
+  .demo .desc { font-size: 0.95rem; margin: 0 0 16px 0; line-height: 1.7; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 28px; align-items: start; }
+  .pair-label { font-size: 0.8rem; color: var(--gray); margin: 0 0 8px 0; }
+  pre.code { margin: 0; padding: 16px; border-radius: 8px; background: #1A1B1A; color: var(--vanilla);
+             font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  iframe.stage { width: 100%; height: 330px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .bm { display: inline-block; padding: 8px 18px; border: 2px solid var(--key); border-radius: 6px; color: var(--key);
+         font-weight: 700; text-decoration: none; cursor: grab; }
+  .steps { margin: 12px 0 0 0; padding: 0 0 0 22px; line-height: 1.9; }
+  .legend td { padding: 6px 16px 6px 0; vertical-align: top; }
+  .u { color: var(--urgent); } .y { color: var(--yellow); } .g { color: var(--green); }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>component-check：元件載入檢查</h1>
+  <p class="lead-note">錄影前用書籤檢查教材頁：哪些元件應載入卻沒載入、哪些載入了卻沒用到。結果顯示在頁面最頂端，不用開主控台。頁面本身不需要加任何程式碼。</p>
+
+  <h3 class="part">加入書籤</h3>
+  <section class="demo">
+    <p class="desc">把下面的按鈕拖到瀏覽器的書籤列，之後打開任何教材頁，點一下書籤就會檢查。</p>
+    <a class="bm" href="javascript:(function(){var s=document.createElement(&#x27;script&#x27;);s.src=&#x27;https://cdn.jsdelivr.net/gh/studyadvice/extras@main/helpers/component-check.js?t=&#x27;+Date.now();document.body.appendChild(s);})();">檢查元件</a>
+    <ol class="steps">
+      <li>拖不動的話：在書籤列按右鍵，新增書籤，名稱填「檢查元件」，網址貼上下面這段。</li>
+      <li>檢查完按頂端的「關閉」即可，頁面不會留下任何東西。</li>
+      <li>修改頁面後，按「重新檢查」重跑一次。</li>
+    </ol>
+    <pre class="code" style="margin-top: 12px;">javascript:(function(){var s=document.createElement(&#x27;script&#x27;);s.src=&#x27;https://cdn.jsdelivr.net/gh/studyadvice/extras@main/helpers/component-check.js?t=&#x27;+Date.now();document.body.appendChild(s);})();</pre>
+  </section>
+
+  <h3 class="part">提示的顏色</h3>
+  <section class="demo">
+    <table class="legend">
+      <tr><td class="u">urgent</td><td>應載入卻沒載入、載入了卻沒用到、重複載入、載入失敗、載入順序錯誤。</td></tr>
+      <tr><td class="y">yellow</td><td>對照表裡找不到的標籤或檔案：可能拼錯，或是對照表需要更新。</td></tr>
+      <tr><td class="g">green</td><td>全部通過。</td></tr>
+    </table>
+  </section>
+
+  <h3 class="part">範例</h3>
+  <p class="lead-note">為了在這一頁同時示範，每個範例頁最後直接寫了 <code>&lt;script src="component-check.js"&gt;</code>。實際使用時不必寫，點書籤就好。</p>
+
+<section class="demo">
+  <h2>1. 缺少元件</h2>
+  <p class="desc">頁面用到 <code>&lt;ui-cards&gt;</code>，卻只載入 <code>text-fx.js</code>。頂端會寫出缺的檔案，並附上可以直接複製的 script。</p>
+  <div class="pair">
+    <div>
+      <p class="pair-label">範例</p>
+      <iframe class="stage" title="缺少元件" srcdoc="&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-Hant&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;body{background:#0C0D0C;color:#C6C7BD;font-family:&quot;微軟正黑體&quot;,&quot;Inter&quot;,sans-serif;margin:0;}main{padding:16px 20px;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;main&gt;
+&lt;text-fx motion=&quot;always&quot;&gt;
+  &lt;p effect=&quot;slide-up&quot;&gt;Mostly reading, usually before bed.&lt;/p&gt;
+&lt;/text-fx&gt;
+&lt;ui-cards cols=&quot;2&quot; flip-toggle flip-color=&quot;key&quot;&gt;
+  &lt;card-item label=&quot;unwind&quot; note=&quot;清單：放鬆&quot;&gt;
+    &lt;card-back&gt;unwind by + V-ing&lt;/card-back&gt;
+  &lt;/card-item&gt;
+  &lt;card-item label=&quot;hectic&quot; note=&quot;清單：忙碌的&quot;&gt;
+    &lt;card-back&gt;things have been hectic&lt;/card-back&gt;
+  &lt;/card-item&gt;
+&lt;/ui-cards&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;/main&gt;
+&lt;script src=&quot;component-check.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;"></iframe>
+    </div>
+    <div>
+      <p class="pair-label">程式碼</p>
+      <pre class="code">&lt;text-fx motion=&quot;always&quot;&gt;
+  &lt;p effect=&quot;slide-up&quot;&gt;Mostly reading, usually before bed.&lt;/p&gt;
+&lt;/text-fx&gt;
+&lt;ui-cards cols=&quot;2&quot; flip-toggle flip-color=&quot;key&quot;&gt;
+  &lt;card-item label=&quot;unwind&quot; note=&quot;清單：放鬆&quot;&gt;
+    &lt;card-back&gt;unwind by + V-ing&lt;/card-back&gt;
+  &lt;/card-item&gt;
+  &lt;card-item label=&quot;hectic&quot; note=&quot;清單：忙碌的&quot;&gt;
+    &lt;card-back&gt;things have been hectic&lt;/card-back&gt;
+  &lt;/card-item&gt;
+&lt;/ui-cards&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;</pre>
+    </div>
+  </div>
+</section>
+<section class="demo">
+  <h2>2. 載入了卻沒用到、重複載入</h2>
+  <p class="desc"><code>text-fx.js</code> 寫了兩次，<code>ui-stream.js</code> 有載入，但頁面沒有任何 <code>&lt;ui-stream&gt;</code>。</p>
+  <div class="pair">
+    <div>
+      <p class="pair-label">範例</p>
+      <iframe class="stage" title="載入了卻沒用到、重複載入" srcdoc="&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-Hant&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;body{background:#0C0D0C;color:#C6C7BD;font-family:&quot;微軟正黑體&quot;,&quot;Inter&quot;,sans-serif;margin:0;}main{padding:16px 20px;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;main&gt;
+&lt;text-fx motion=&quot;always&quot;&gt;
+  &lt;p effect=&quot;slide-up&quot;&gt;Mostly reading, usually before bed.&lt;/p&gt;
+&lt;/text-fx&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/flow/ui-stream.js&quot;&gt;&lt;/script&gt;
+&lt;/main&gt;
+&lt;script src=&quot;component-check.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;"></iframe>
+    </div>
+    <div>
+      <p class="pair-label">程式碼</p>
+      <pre class="code">&lt;text-fx motion=&quot;always&quot;&gt;
+  &lt;p effect=&quot;slide-up&quot;&gt;Mostly reading, usually before bed.&lt;/p&gt;
+&lt;/text-fx&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/flow/ui-stream.js&quot;&gt;&lt;/script&gt;</pre>
+    </div>
+  </div>
+</section>
+<section class="demo">
+  <h2>3. 拼錯的標籤</h2>
+  <p class="desc"><code>&lt;card-itme&gt;</code> 和 <code>&lt;c-bluee&gt;</code> 不在對照表裡，以黃字提醒。拼錯的標籤不會顯示任何效果，最容易在錄影時才發現。</p>
+  <div class="pair">
+    <div>
+      <p class="pair-label">範例</p>
+      <iframe class="stage" title="拼錯的標籤" srcdoc="&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-Hant&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;body{background:#0C0D0C;color:#C6C7BD;font-family:&quot;微軟正黑體&quot;,&quot;Inter&quot;,sans-serif;margin:0;}main{padding:16px 20px;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;main&gt;
+&lt;ui-cards cols=&quot;2&quot;&gt;
+  &lt;card-itme label=&quot;unwind&quot;&gt;放鬆&lt;/card-itme&gt;
+  &lt;card-item label=&quot;hectic&quot;&gt;I &lt;c-bluee&gt;usually&lt;/c-bluee&gt; unwind by cooking.&lt;/card-item&gt;
+&lt;/ui-cards&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/layout/ui-cards.js&quot;&gt;&lt;/script&gt;
+&lt;/main&gt;
+&lt;script src=&quot;component-check.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;"></iframe>
+    </div>
+    <div>
+      <p class="pair-label">程式碼</p>
+      <pre class="code">&lt;ui-cards cols=&quot;2&quot;&gt;
+  &lt;card-itme label=&quot;unwind&quot;&gt;放鬆&lt;/card-itme&gt;
+  &lt;card-item label=&quot;hectic&quot;&gt;I &lt;c-bluee&gt;usually&lt;/c-bluee&gt; unwind by cooking.&lt;/card-item&gt;
+&lt;/ui-cards&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/layout/ui-cards.js&quot;&gt;&lt;/script&gt;</pre>
+    </div>
+  </div>
+</section>
+<section class="demo">
+  <h2>4. 全部通過</h2>
+  <p class="desc">載入的元件都有用到，也沒有缺漏，頂端顯示一行綠字，不會自動消失。</p>
+  <div class="pair">
+    <div>
+      <p class="pair-label">範例</p>
+      <iframe class="stage" title="全部通過" srcdoc="&lt;!DOCTYPE html&gt;&lt;html lang=&quot;zh-Hant&quot;&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;style&gt;body{background:#0C0D0C;color:#C6C7BD;font-family:&quot;微軟正黑體&quot;,&quot;Inter&quot;,sans-serif;margin:0;}main{padding:16px 20px;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;main&gt;
+&lt;text-fx motion=&quot;always&quot;&gt;
+  &lt;p effect=&quot;slide-up&quot;&gt;Mostly reading, usually before bed.&lt;/p&gt;
+&lt;/text-fx&gt;
+&lt;ui-cards cols=&quot;2&quot; flip-toggle flip-color=&quot;key&quot;&gt;
+  &lt;card-item label=&quot;unwind&quot; note=&quot;清單：放鬆&quot;&gt;
+    &lt;card-back&gt;unwind by + V-ing&lt;/card-back&gt;
+  &lt;/card-item&gt;
+  &lt;card-item label=&quot;hectic&quot; note=&quot;清單：忙碌的&quot;&gt;
+    &lt;card-back&gt;things have been hectic&lt;/card-back&gt;
+  &lt;/card-item&gt;
+&lt;/ui-cards&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/layout/ui-cards.js&quot;&gt;&lt;/script&gt;
+&lt;/main&gt;
+&lt;script src=&quot;component-check.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;&lt;/html&gt;"></iframe>
+    </div>
+    <div>
+      <p class="pair-label">程式碼</p>
+      <pre class="code">&lt;text-fx motion=&quot;always&quot;&gt;
+  &lt;p effect=&quot;slide-up&quot;&gt;Mostly reading, usually before bed.&lt;/p&gt;
+&lt;/text-fx&gt;
+&lt;ui-cards cols=&quot;2&quot; flip-toggle flip-color=&quot;key&quot;&gt;
+  &lt;card-item label=&quot;unwind&quot; note=&quot;清單：放鬆&quot;&gt;
+    &lt;card-back&gt;unwind by + V-ing&lt;/card-back&gt;
+  &lt;/card-item&gt;
+  &lt;card-item label=&quot;hectic&quot; note=&quot;清單：忙碌的&quot;&gt;
+    &lt;card-back&gt;things have been hectic&lt;/card-back&gt;
+  &lt;/card-item&gt;
+&lt;/ui-cards&gt;
+
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/tfx/text-fx.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/gh/studyadvice/workforce@keyexpert.org/layout/ui-cards.js&quot;&gt;&lt;/script&gt;</pre>
+    </div>
+  </div>
+</section>
+</div>
+</body>
+</html>
