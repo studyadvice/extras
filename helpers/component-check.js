@@ -27,12 +27,14 @@
     'arrow-flow.js': {'r':'u','o':['arrow-flow','branch-option','flow-branch','flow-step'],'d':['arrow-flow','branch-option','flow-branch','flow-step'],'g':['ArrowFlow']},
     'bd/badge-targets.js': {'r':'u','o':[],'d':[],'g':['BadgeTargets']},
     'bd/card-badge.js': {'r':'u','o':['badge-item','card-badge'],'d':['badge-item','card-badge'],'g':[]},
+    'bk/ui-booking.js': {'r':'u','o':['bk-done','bk-field','bk-option','bk-step','ui-booking'],'d':['bk-done','bk-field','bk-option','bk-step','ui-booking'],'g':['UiBooking']},
     'bp-stepper.js': {'r':'u','o':['bp-step','bp-step-content','bp-step-title','bp-stepper'],'d':[],'g':['BPStepper']},
     'charts/ui-charts.js': {'r':'u','o':['chart-row','ui-chart'],'d':['chart-row','ui-chart'],'g':['UiChart']},
     'chunk-demo.js': {'r':'u','o':['cd-chunk','cd-level','chunk-demo'],'d':['chunk-demo'],'g':[]},
     'cn/ui-connect.js': {'r':'u','o':['connect-line','ui-connect'],'d':['connect-line','ui-connect'],'g':['UiConnect']},
     'dash/ui-dashboard.js': {'r':'u','o':['dash-cell','ui-dashboard'],'d':['dash-cell','ui-dashboard'],'g':[]},
     'drag/ui-drag-ans.js': {'r':'u','o':['drag-card','drop-slot','ui-drag-ans'],'d':['drag-card','drop-slot','ui-drag-ans'],'g':['UiDragAns']},
+    'dv/ui-drive.js': {'r':'u','o':['dv-do','dv-file','dv-folder','ui-drive'],'d':['dv-do','dv-file','dv-folder','ui-drive'],'g':['UiDrive']},
     'editor/md-editor-beyond.js': {'r':'u','o':[],'d':[],'g':['MdEditorBeyond']},
     'editor/md-editor.js': {'r':'u','o':['md-editor'],'d':['md-editor'],'g':['MdEditor']},
     'flow/play-maker.js': {'r':'u','o':['play-maker'],'d':['play-maker'],'g':[]},
@@ -61,6 +63,7 @@
     'pg/ui-progrid.js': {'r':'u','o':['pg-cat','pg-desc','pg-more','pg-note','pg-opt','pg-row','ui-progrid'],'d':['ui-progrid'],'g':['UiProgrid']},
     'php-integrated/ui-reaction/ui-reaction.js': {'r':'u','o':['reaction-item','ui-reaction'],'d':['reaction-item','ui-reaction'],'g':['UiReaction']},
     'phrase-chip.js': {'r':'u','o':['phrase-card','phrase-chip','phrase-example','phrase-stage','phrase-translation','phrase-upgrade'],'d':[],'g':[]},
+    'pl/ui-playlist.js': {'r':'u','o':['pl-gap','pl-key','pl-line','pl-note','pl-track','ui-playlist'],'d':['pl-gap','pl-key','pl-line','pl-note','pl-track','ui-playlist'],'g':['UiPlaylist']},
     'post/ui-post-beyond.js': {'r':'u','o':[],'d':[],'g':['UiPostBeyond']},
     'post/ui-post.js': {'r':'u','o':['post-item','ui-post'],'d':['ui-post'],'g':['UiPost']},
     'practice-tracker.js': {'r':'u','o':['practice-tracker','pt-cell','pt-done-btn'],'d':[],'g':[]},
@@ -90,7 +93,9 @@
     'ui-tabs.js': {'r':'u','o':['tab-item','ui-tabs'],'d':['ui-tabs'],'g':['UiTabs']},
     'ui-toast-beyond.js': {'r':'u','o':['ui-toast-panel'],'d':['ui-toast-panel'],'g':['UiToastBeyond']},
     'ui-toast.js': {'r':'u','o':['ui-toast'],'d':[],'g':['UiToast','UiToastConfig']},
-    'vt/v-title.js': {'r':'u','o':['v-title'],'d':['v-title'],'g':['VTitle']}
+    'vt/v-title.js': {'r':'u','o':['v-title'],'d':['v-title'],'g':['VTitle']},
+    'wb/ui-workbook.js': {'r':'u','o':['ui-workbook','wb-chart','wb-do','wb-sheet'],'d':['ui-workbook','wb-chart','wb-do','wb-sheet'],'g':['UiWorkbook']},
+    'wk/ui-week.js': {'r':'u','o':['ui-week','wk-cat','wk-event'],'d':['ui-week','wk-cat','wk-event'],'g':['UiWeek']}
   };
   /* 多個檔案都能處理的標籤：載入其中任何一個就不算缺 */
   var SHARED = {'mark-fx':['bp-stepper.js','flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','ladder/ui-detail-ladder.js','layout/ui-cards.js','layout/ui-drill.js','post/ui-post.js','tbl/ui-table.js','tfx/text-fx.js','vt/v-title.js'],'note-fx':['flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','post/ui-post.js','tfx/text-fx.js','vt/v-title.js'],'remove-fx':['flow/ui-play.js','flow/ui-stream.js','post/ui-post.js'],'shake-fx':['flow/ui-play.js','tfx/text-fx.js'],'show-fx':['flow/play-maker.js','flow/ui-play.js'],'stamp-fx':['flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','post/ui-post.js'],'swap-fx':['flow/play-maker.js','flow/ui-play.js','flow/ui-stream.js','post/ui-post.js','tfx/text-fx.js'],'ui-flash':['tbl/ui-table.js','vt/v-title.js'],'ui-trans':['tbl/ui-table.js','vt/v-title.js'],'zoom-fx':['flow/ui-play.js','tfx/text-fx.js']};
