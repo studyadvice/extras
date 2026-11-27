@@ -89,6 +89,15 @@
     <p>鈴鐺徽章與左側「收件匣」旁的數字一起變動。起始值是既有郵件裡 <code>unread</code> 的封數；想模擬畫面外還有很多舊信，可以在 <code>&lt;inbox-arrival&gt;</code> 寫 <code>unread="12"</code> 直接指定。每抵達一封加一，打開一封未讀信件減一，數字為 0 時徽章隱藏。</p>
     <h3>骨架列</h3>
     <p>既有郵件少的時候，列表下方會用灰色骨架列補滿，看起來像還有更多信件。預設 <code>filler="auto"</code> 補到既有郵件加骨架列共 8 列；寫數字指定列數，寫 <code>0</code> 不補。骨架列不能點。</p>
+    <p>想自動補、但不要補太多，可以加 <code>filler-max</code>。例如既有郵件 2 封時，<code>auto</code> 原本會補 6 列，加上 <code>filler-max="2"</code> 就只補 2 列。<code>filler</code> 寫數字時不看 <code>filler-max</code>。列表區大約看得到 7 列半，超過的會被裁掉；新信抵達時也會把下面的列往下推出畫面。</p>
+    <h3>左側欄寬度</h3>
+    <p><code>sidebar</code> 有四種寬度。畫面固定 960 寬，側欄越寬，右邊的列表與閱讀窗格就越窄。</p>
+    <ul>
+      <li><code>narrow</code>：72px，只剩圖示；「撰寫」變成圓形筆圖示，收件匣的未讀數變成圖示右上角的小圓點，左上角只留標誌圖示。適合單字表這類需要較寬內容區的用途。</li>
+      <li><code>medium</code>：200px，預設。</li>
+      <li><code>wide</code>：260px，適合比較長的資料夾名稱。</li>
+      <li><code>none</code>：不顯示側欄，列表與閱讀窗格使用整個寬度。</li>
+    </ul>
     <h3>收完信後閱讀</h3>
     <p>動畫完結後，點列表上任何一封信（既有或新的）都會在右側閱讀窗格打開，並標為已讀；窗格右上角的「關閉」可以收起。</p>
 
@@ -116,6 +125,8 @@
       <tr><td><code>hint</code></td><td>點擊收信</td><td><code>trigger="click"</code> 時的提示文字；寫空字串不顯示。</td></tr>
       <tr><td><code>unread</code></td><td>自動</td><td>起始未讀數；沒寫時等於既有郵件裡 <code>unread</code> 的封數。</td></tr>
       <tr><td><code>filler</code></td><td>auto</td><td>骨架列數量；<code>auto</code> 補到共 8 列，<code>0</code> 不補。</td></tr>
+      <tr><td><code>filler-max</code></td><td>無</td><td><code>filler="auto"</code> 時最多補幾列骨架；<code>filler</code> 寫數字時不適用。</td></tr>
+      <tr><td><code>sidebar</code></td><td>medium</td><td>左側欄寬度：<code>narrow</code>（只剩圖示）、<code>medium</code>、<code>wide</code>、<code>none</code>（不顯示）。</td></tr>
       <tr><td><code>app-name</code></td><td>Mailbox</td><td>左上角的程式名稱。</td></tr>
       <tr><td><code>user</code></td><td>我</td><td>使用者名稱：右上角頭像取第一個字，閱讀窗格顯示「寄給 …」。</td></tr>
       <tr><td><code>folder-name</code></td><td>收件匣</td><td>左側欄第一個資料夾與列表標題的名稱。</td></tr>

@@ -45,6 +45,47 @@
   <p class="lead-note">收件匣先顯示既有郵件，鈴鐺搖晃、未讀數加一，新郵件從列表頂端滑入並亮起；可以加通知卡、讓游標移過去點開新郵件。完結後可以顯示或刪除指定元素，也能用 link-when 串接。每個範例的「畫面」與「程式碼」由同一段原始碼產生。單一 <code>inbox-arrival.js</code>，CSS 內建，不用 Shadow DOM。完整屬性見 <a href="inbox-arrival-guide.html">說明網頁</a>。</p>
 
   <section class="demo" data-demo>
+    <h2>範例 7：側欄寬度與骨架列上限，做成單字表</h2>
+    <p class="desc"><code>sidebar</code> 切換左側欄：<code>narrow</code> 只剩圖示，未讀數變成小圓點；<code>medium</code> 是預設；<code>wide</code> 比較寬鬆；<code>none</code> 不顯示側欄。<code>filler-max</code> 搭配預設的 <code>filler="auto"</code>，限制最多補幾列骨架。上面的單字表用 <code>narrow</code>，既有單字 2 個，原本會補 6 列骨架，<code>filler-max="2"</code> 讓它只補 2 列。下面兩個是 <code>wide</code> 和 <code>none</code> 的樣子。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival sidebar="narrow" filler-max="2" replay open-mail interval="1000"
+               app-name="Word Box" folder-name="今日單字" hint="點擊收單字">
+  <inbox-mail from="resilient" subject="adj. 有韌性的；能迅速恢復的" time="B2">
+    <p>Children are often more resilient than adults expect.</p>
+  </inbox-mail>
+  <inbox-mail from="commute" subject="n. / v. 通勤" time="B1" star>
+    <p>My daily commute takes about an hour.</p>
+  </inbox-mail>
+  <inbox-mail new from="meticulous" subject="adj. 一絲不苟的" time="C1">
+    <p>She keeps meticulous notes on every lesson.</p>
+  </inbox-mail>
+  <inbox-mail new from="thrive" subject="v. 茁壯成長；興旺" time="B2">
+    <p>Some plants thrive in hot, dry conditions.</p>
+  </inbox-mail>
+</inbox-arrival>
+
+<inbox-arrival sidebar="wide" folder-name="本週複習清單" filler-max="3" replay>
+  <inbox-mail from="Amy" subject="Re: 讀書會" time="11月23日">週六下午三點可以嗎？</inbox-mail>
+  <inbox-mail new from="王老師" subject="複習提醒" time="剛剛">別忘了週五的小考。</inbox-mail>
+</inbox-arrival>
+
+<inbox-arrival sidebar="none" filler="3" replay>
+  <inbox-mail new from="系統通知" subject="側欄已隱藏" time="剛剛">列表與閱讀窗格使用整個寬度。</inbox-mail>
+</inbox-arrival>
+    </script>
+    <p class="pair-label" style="margin:16px 0 8px 0">修改前後對照</p>
+    <pre class="code"><code>修改前：左側欄固定 200px；filler="auto" 一律補到共 8 列
+&lt;inbox-arrival filler="auto"&gt;
+
+修改後：sidebar 可選 narrow、medium、wide、none；filler-max 限制 auto 最多補幾列
+&lt;inbox-arrival sidebar="narrow" filler-max="2"&gt;</code></pre>
+  </section>
+
+  <section class="demo" data-demo>
     <h2>範例 1：既有郵件加一封新郵件</h2>
     <p class="desc">沒有 <code>new</code> 的 <code>&lt;inbox-mail&gt;</code> 是既有郵件，依原始碼順序由上往下排；有 <code>unread</code> 的既有郵件算進起始未讀數。既有郵件不到 8 封時，下方自動用灰色骨架列補滿。點畫面開始；加上 <code>replay</code>，完結後下方出現「再收一次」。收完信後，點任何一封信都能打開閱讀。</p>
     <div class="pair">

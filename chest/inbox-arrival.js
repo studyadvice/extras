@@ -1,6 +1,7 @@
 /* inbox-arrival.js：模擬收件匣收到新郵件的動畫。
    收件匣先顯示既有郵件，鈴鐺搖晃、未讀數加一，新郵件從列表頂端滑入並亮起，可加右上角通知卡；
    可選擇讓游標移過去點開新郵件，展開閱讀窗格。完結後可顯示或刪除指定元素，並支援 link-when。
+   左側欄有 narrow、medium、wide、none 四種寬度；骨架列自動補滿時可用 filler-max 限制上限。
    語意標籤：<inbox-arrival> <inbox-mail>
    單一檔案，CSS 內建，不使用 Shadow DOM，不需要任何外部資源，離線也能用。顏色一律實色，不使用透明度。
    畫面是自創的通用郵件程式，不模仿任何真實產品。 */
@@ -60,6 +61,8 @@
 
   /* 設計尺寸：畫面先以 960×560 排版，再依實際寬度等比縮放 */
   const DW = 960, DH = 560, ROW = 62;
+  /* 左側欄寬度：narrow 只剩圖示，none 不顯示 */
+  const SIDEBAR = { narrow: 72, medium: 200, wide: 260, none: 0 };
   /* 骨架列的長度（px 與 %），依序循環 */
   const SKEL_FROM = [96, 118, 82, 106, 90, 128, 100, 112];
   const SKEL_SUB = [62, 78, 55, 70, 86, 58, 66, 73];
@@ -88,20 +91,28 @@ inbox-arrival .ia-stage *{box-sizing:border-box;}
 inbox-arrival .ia-stage.ia-click{cursor:pointer;}
 inbox-arrival .ia-stage svg{display:block;}
 inbox-arrival .ia-top{position:absolute;left:0;top:0;right:0;height:56px;display:flex;align-items:center;gap:18px;padding:0 20px;}
-inbox-arrival .ia-logo{display:flex;align-items:center;gap:10px;width:172px;flex:none;font-weight:800;font-size:1.1rem;color:var(--ia-strong);white-space:nowrap;overflow:hidden;}
+inbox-arrival .ia-logo{display:flex;align-items:center;gap:10px;width:calc(var(--ia-sw) - 28px);flex:none;font-weight:800;font-size:1.1rem;color:var(--ia-strong);white-space:nowrap;overflow:hidden;}
 inbox-arrival .ia-logo i{width:30px;height:30px;border-radius:8px;background:var(--ia-accent);color:var(--ia-bg);display:flex;align-items:center;justify-content:center;flex:none;}
 inbox-arrival .ia-search{flex:1;height:38px;border-radius:19px;background:var(--ia-panel);color:var(--ia-dim);display:flex;align-items:center;gap:10px;padding:0 18px;font-size:0.9rem;}
 inbox-arrival .ia-bell{position:relative;width:38px;height:38px;display:flex;align-items:center;justify-content:center;color:var(--ia-text);transform-origin:50% 8px;flex:none;}
 inbox-arrival .ia-badge{position:absolute;right:-3px;top:-1px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--ia-badge);color:var(--ia-bg);font-size:0.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1;}
 inbox-arrival .ia-badge.off{display:none;}
 inbox-arrival .ia-me{width:36px;height:36px;border-radius:50%;background:var(--ia-me);color:var(--ia-bg);font-weight:800;font-size:0.95rem;display:flex;align-items:center;justify-content:center;flex:none;}
-inbox-arrival .ia-side{position:absolute;left:0;top:56px;bottom:0;width:200px;padding:10px 12px 0 0;}
+inbox-arrival .ia-side{position:absolute;left:0;top:56px;bottom:0;width:var(--ia-sw);padding:10px 12px 0 0;}
 inbox-arrival .ia-compose{display:inline-flex;align-items:center;gap:10px;height:38px;padding:0 18px;margin:0 0 16px 12px;border-radius:12px;border:1px solid var(--ia-accent);color:var(--ia-accent);font-weight:700;font-size:0.95rem;}
 inbox-arrival .ia-folder{display:flex;align-items:center;gap:12px;height:36px;padding:0 12px 0 20px;border-radius:0 18px 18px 0;font-size:0.92rem;color:var(--ia-text);}
 inbox-arrival .ia-folder.on{background:var(--ia-sel);color:var(--ia-strong);font-weight:700;}
 inbox-arrival .ia-folder b{margin-left:auto;font-size:0.8rem;font-weight:800;}
 inbox-arrival .ia-folder b.off{display:none;}
-inbox-arrival .ia-main{position:absolute;left:200px;top:56px;right:0;bottom:0;background:var(--ia-panel);border-radius:12px 0 0 0;overflow:hidden;}
+inbox-arrival .ia-sb-narrow .ia-logo span{display:none;}
+inbox-arrival .ia-sb-narrow .ia-compose{width:42px;height:42px;padding:0;margin:0 0 16px 15px;border-radius:50%;justify-content:center;}
+inbox-arrival .ia-sb-narrow .ia-compose span{display:none;}
+inbox-arrival .ia-sb-narrow .ia-folder{position:relative;justify-content:center;padding:0 0 0 12px;}
+inbox-arrival .ia-sb-narrow .ia-folder span{display:none;}
+inbox-arrival .ia-sb-narrow .ia-folder b{position:absolute;right:12px;top:6px;margin:0;width:8px;height:8px;border-radius:50%;background:var(--ia-badge);font-size:0;overflow:hidden;}
+inbox-arrival .ia-sb-none .ia-side{display:none;}
+inbox-arrival .ia-sb-none .ia-logo{width:auto;}
+inbox-arrival .ia-main{position:absolute;left:var(--ia-sw);top:56px;right:0;bottom:0;background:var(--ia-panel);border-radius:12px 0 0 0;overflow:hidden;}
 inbox-arrival .ia-head{height:38px;display:flex;align-items:center;gap:12px;padding:0 18px;font-size:0.85rem;color:var(--ia-dim);border-bottom:1px solid var(--ia-line);}
 inbox-arrival .ia-head strong{color:var(--ia-strong);font-weight:700;}
 inbox-arrival .ia-list{position:absolute;left:0;right:0;top:38px;bottom:0;overflow:hidden;}
@@ -170,7 +181,13 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
         width: clamp(num(a('width'), DW), 520, 1600), trigger: a('trigger', 'click'), delay: num(a('delay'), 300),
         interval: Math.max(600, num(a('interval'), 1200)), cursor: on('cursor'), open: on('open-mail') || on('cursor'),
         toast: on('toast'), replay: on('replay'), appName: a('app-name', 'Mailbox'), user: a('user', '我'),
-        folder: a('folder-name', '收件匣'), filler: a('filler', 'auto'), unread: a('unread', ''),
+        folder: a('folder-name', '收件匣'), filler: a('filler', 'auto'), fillerMax: a('filler-max', ''), unread: a('unread', ''),
+        sidebar: (() => {
+          const s = String(a('sidebar', 'medium')).trim().toLowerCase();
+          if (s in SIDEBAR) return s;
+          console.warn(`[inbox-arrival] sidebar 只接受 narrow、medium、wide、none，已改用 medium：${s}`);
+          return 'medium';
+        })(),
         bg: color(a('bg', 'base')), panel: color(a('panel', 'bg-alternative')), accent: color(a('accent', 'key')),
         text: color(a('text-color', 'shell')), badge: color(a('badge-color', 'red')), me: color(a('user-color', 'violet')),
         hint: a('hint', '點擊收信'), replayHint: a('replay-hint', '再收一次'),
@@ -214,7 +231,8 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
       Object.keys(v).forEach(k => this.style.setProperty('--ia-' + k, v[k]));
 
       const wrap = this.wrap = document.createElement('div'); wrap.className = 'ia-wrap';
-      const stage = this.stage = document.createElement('div'); stage.className = 'ia-stage';
+      const stage = this.stage = document.createElement('div'); stage.className = 'ia-stage ia-sb-' + o.sidebar;
+      stage.style.setProperty('--ia-sw', SIDEBAR[o.sidebar] + 'px');
       wrap.append(stage); this.append(wrap);
       this._render();
 
@@ -271,7 +289,9 @@ inbox-arrival .ia-hint.ia-replay{pointer-events:auto;cursor:pointer;}
       this.list = q('.ia-list'); this.read = q('.ia-read'); this.toastEl = q('.ia-toast'); this.cursor = q('.ia-cursor');
       this.bell = q('.ia-bell'); this.badge = q('.ia-badge'); this.fcount = q('.ia-fcount'); this.totalEl = q('.ia-total'); this.hintEl = q('.ia-hint');
       d.forEach((m, i) => { if (!m.isNew) this.list.append(this._row(m, i)); });
-      const fill = o.filler === 'auto' ? Math.max(0, 8 - this._total) : Math.max(0, Math.round(num(o.filler, 0)));
+      /* 骨架列：auto 補到共 8 列，filler-max 限制 auto 最多補幾列；寫數字就固定那個列數 */
+      let fill = o.filler === 'auto' ? Math.max(0, 8 - this._total) : Math.max(0, Math.round(num(o.filler, 0)));
+      if (o.filler === 'auto' && o.fillerMax !== '') fill = Math.min(fill, Math.max(0, Math.round(num(o.fillerMax, fill))));
       for (let i = 0; i < fill; i++) this.list.append(this._skel(i));
       this._counts();
       this.stage.classList.remove('ia-done');
