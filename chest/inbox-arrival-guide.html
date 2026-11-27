@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inbox-arrival 說明</title>
+<style>
+  :root {
+    --bg: #0C0D0C; --alt: #2D2D2D; --shell: #C6C7BD; --vanilla: #DBEDD8; --yellow: #E3D322; --blue: #5DBAE8;
+    --gray: #86877F; --line: #3B3C3A; --key: #51DBCF; --violet: #B484E8;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--shell); }
+  body { font-family: "微軟正黑體", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif; font-size: 1rem; margin: 0; min-width: 1280px; line-height: 1.75; }
+  .page { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 38px; max-width: 1500px; margin: 0 auto; padding: 32px 38px 80px 38px; }
+  nav { position: sticky; top: 28px; align-self: start; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; background: #121312; }
+  nav b { display: block; color: var(--vanilla); margin: 0 0 8px 0; }
+  nav a { display: block; color: var(--shell); text-decoration: none; font-size: 0.92rem; padding: 3px 0; }
+  nav a:hover { color: var(--key); }
+  h1 { color: var(--vanilla); font-size: 2rem; margin: 0 0 8px 0; }
+  h1 code { color: var(--key); }
+  .lead { color: var(--gray); margin: 0 0 28px 0; }
+  .lead a, p a, td a { color: var(--key); }
+  h2 { color: var(--blue); font-size: 1.35rem; margin: 38px 0 12px 0; padding: 0 0 8px 0; border-bottom: 1px solid var(--line); }
+  h3 { color: var(--violet); font-size: 1.1rem; margin: 22px 0 8px 0; }
+  p { margin: 0 0 12px 0; }
+  ul { margin: 0 0 12px 0; padding: 0 0 0 22px; }
+  li { margin: 0 0 5px 0; }
+  code { color: var(--yellow); font-family: Consolas, "Cascadia Mono", ui-monospace, monospace; font-size: 0.9em; }
+  pre { margin: 0 0 16px 0; padding: 16px 18px; border-radius: 8px; background: #1A1B1A; border: 1px solid var(--line); color: var(--vanilla);
+        font-family: Consolas, "Cascadia Mono", ui-monospace, monospace; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap; }
+  pre code { color: inherit; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 0 0 18px 0; font-size: 0.92rem; }
+  th { text-align: left; color: var(--bg); background: var(--shell); padding: 7px 12px; }
+  td { padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--vanilla); }
+  td:first-child { white-space: nowrap; }
+  td:first-child code { color: var(--key); }
+  td:nth-child(2) { white-space: nowrap; color: var(--yellow); }
+  .flow { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 0; margin: 0 0 18px 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .flow div { padding: 8px 16px; border-bottom: 1px solid var(--line); }
+  .flow div:nth-child(odd) { background: var(--alt); color: var(--key); font-weight: 700; }
+  .flow div:nth-last-child(-n+2) { border-bottom: 0; }
+  .live { margin: 0 0 18px 0; max-width: 960px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav>
+    <b>目錄</b>
+    <a href="#start">快速開始</a>
+    <a href="#mails">既有郵件與新郵件</a>
+    <a href="#flow">動畫流程</a>
+    <a href="#attrs">inbox-arrival 屬性</a>
+    <a href="#mail-attrs">inbox-mail 屬性</a>
+    <a href="#colors">配色</a>
+    <a href="#targets">完結後顯示或刪除元素</a>
+    <a href="#lw">搭配 link-when</a>
+    <a href="#license">授權</a>
+  </nav>
+  <main>
+    <h1><code>&lt;inbox-arrival&gt;</code> 收件匣收到新郵件</h1>
+    <p class="lead">模擬郵件程式收到新信：鈴鐺搖晃、未讀數加一，新郵件從列表頂端滑入並亮起；可以加通知卡，或讓游標移過去點開新郵件、展開閱讀窗格。單一檔案 <code>inbox-arrival.js</code>，CSS 內建，不使用 Shadow DOM，不需要任何外部資源，離線也能用。顏色一律實色，不使用透明度。畫面是自創的通用郵件程式，不模仿任何真實產品。範例頁：<a href="inbox-arrival-demo-11-27-26.html">inbox-arrival-demo-11-27-26.html</a>。</p>
+
+    <h2 id="start">快速開始</h2>
+    <pre><code>&lt;inbox-arrival replay&gt;
+  &lt;inbox-mail from="王老師" subject="本週口說作業" time="昨天" unread&gt;請在週五前完成 Part 1 錄音。&lt;/inbox-mail&gt;
+  &lt;inbox-mail from="教務處" subject="期中考時間公告" time="11月25日"&gt;考試地點在 B203。&lt;/inbox-mail&gt;
+  &lt;inbox-mail new from="IELTS 成績中心" subject="你的成績已公布"&gt;恭喜！口說 7.0，寫作 6.5。&lt;/inbox-mail&gt;
+&lt;/inbox-arrival&gt;
+
+&lt;script src="inbox-arrival.js"&gt;&lt;/script&gt;</code></pre>
+    <div class="live">
+      <inbox-arrival replay width="900">
+        <inbox-mail from="王老師" subject="本週口說作業" time="昨天" unread>請在週五前完成 Part 1 錄音。</inbox-mail>
+        <inbox-mail from="教務處" subject="期中考時間公告" time="11月25日">考試地點在 B203。</inbox-mail>
+        <inbox-mail new from="IELTS 成績中心" subject="你的成績已公布">恭喜！口說 7.0，寫作 6.5。</inbox-mail>
+      </inbox-arrival>
+    </div>
+    <p>畫面先以 960×560 排版，再依 <code>width</code> 或可用寬度等比縮放，所以放進較窄的欄位也不會跑版。</p>
+
+    <h2 id="mails">既有郵件與新郵件</h2>
+    <p>收件匣裡的每一封信都寫成一個 <code>&lt;inbox-mail&gt;</code>，用有沒有 <code>new</code> 區分：</p>
+    <ul>
+      <li><b>既有郵件</b>（沒有 <code>new</code>）：一開始就在列表上，依原始碼順序由上往下排。可以加 <code>unread</code> 顯示成未讀、<code>star</code> 加星號、<code>attach</code> 顯示附件圖示。</li>
+      <li><b>新郵件</b>（有 <code>new</code>）：播放時依原始碼順序一封一封抵達，每一封都插到最上面，所以最後抵達的會排在第一列。新郵件一律是未讀，<code>time</code> 沒寫時顯示「剛剛」。</li>
+      <li>一封新郵件都沒有時，主控台會提醒，並改用一封預設的「你有一封新郵件」。</li>
+    </ul>
+    <h3>未讀數</h3>
+    <p>鈴鐺徽章與左側「收件匣」旁的數字一起變動。起始值是既有郵件裡 <code>unread</code> 的封數；想模擬畫面外還有很多舊信，可以在 <code>&lt;inbox-arrival&gt;</code> 寫 <code>unread="12"</code> 直接指定。每抵達一封加一，打開一封未讀信件減一，數字為 0 時徽章隱藏。</p>
+    <h3>骨架列</h3>
+    <p>既有郵件少的時候，列表下方會用灰色骨架列補滿，看起來像還有更多信件。預設 <code>filler="auto"</code> 補到既有郵件加骨架列共 8 列；寫數字指定列數，寫 <code>0</code> 不補。骨架列不能點。</p>
+    <h3>收完信後閱讀</h3>
+    <p>動畫完結後，點列表上任何一封信（既有或新的）都會在右側閱讀窗格打開，並標為已讀；窗格右上角的「關閉」可以收起。</p>
+
+    <h2 id="flow">動畫流程</h2>
+    <div class="flow">
+      <div>待機</div><div>顯示既有郵件與骨架列；<code>trigger="click"</code> 時下方出現提示文字。</div>
+      <div>每封新信</div><div>鈴鐺搖晃 → 0.2 秒後新信從頂端滑入、原有信件往下推，那一行先亮成強調色再漸變回未讀樣式 → 未讀數加一；有 <code>toast</code> 時右上角滑出通知卡，約 2.8 秒後收回。</div>
+      <div>多封新信</div><div>每封間隔 <code>interval</code> 毫秒。</div>
+      <div>打開新信</div><div>有 <code>cursor</code> 時，游標從右下角移到最後一封新信上按一下，出現點擊波紋；只有 <code>open-mail</code> 時，那一行輕壓一下。接著展開閱讀窗格。</div>
+      <div>完結</div><div>沒有打開信件：最後一封新信亮起漸變結束時。有打開信件：閱讀窗格展開之後。此時執行 <code>reveal-targets</code>、<code>remove-targets</code>，link-when 的 <code>event="done"</code> 也在這一刻觸發。</div>
+    </div>
+
+    <h2 id="attrs">inbox-arrival 屬性</h2>
+    <table>
+      <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+      <tr><td><code>trigger</code></td><td>click</td><td><code>click</code>：點畫面開始；<code>auto</code>：捲動到畫面中自動開始；<code>none</code>：只由 link-when 或程式啟動。</td></tr>
+      <tr><td><code>delay</code></td><td>300</td><td><code>trigger="auto"</code> 時，出現在畫面上之後等幾毫秒再開始。</td></tr>
+      <tr><td><code>interval</code></td><td>1200</td><td>多封新郵件之間的間隔（毫秒），最少 600。</td></tr>
+      <tr><td><code>width</code></td><td>960</td><td>寬度（px），高度依 960×560 的比例自動計算；可用範圍 520 到 1600。放在較窄的容器裡會自動縮小。</td></tr>
+      <tr><td><code>toast</code></td><td>關</td><td>每封新信抵達時，右上角滑出通知卡。</td></tr>
+      <tr><td><code>open-mail</code></td><td>關</td><td>最後打開最後抵達的那封新信，展開閱讀窗格。</td></tr>
+      <tr><td><code>cursor</code></td><td>關</td><td>顯示游標移過去點開新信的動作。寫了 <code>cursor</code> 就會打開信件，不必再加 <code>open-mail</code>。</td></tr>
+      <tr><td><code>replay</code></td><td>關</td><td>完結後下方出現重播按鈕，點了回到待機並重新播放。</td></tr>
+      <tr><td><code>replay-hint</code></td><td>再收一次</td><td>重播按鈕的文字。</td></tr>
+      <tr><td><code>hint</code></td><td>點擊收信</td><td><code>trigger="click"</code> 時的提示文字；寫空字串不顯示。</td></tr>
+      <tr><td><code>unread</code></td><td>自動</td><td>起始未讀數；沒寫時等於既有郵件裡 <code>unread</code> 的封數。</td></tr>
+      <tr><td><code>filler</code></td><td>auto</td><td>骨架列數量；<code>auto</code> 補到共 8 列，<code>0</code> 不補。</td></tr>
+      <tr><td><code>app-name</code></td><td>Mailbox</td><td>左上角的程式名稱。</td></tr>
+      <tr><td><code>user</code></td><td>我</td><td>使用者名稱：右上角頭像取第一個字，閱讀窗格顯示「寄給 …」。</td></tr>
+      <tr><td><code>folder-name</code></td><td>收件匣</td><td>左側欄第一個資料夾與列表標題的名稱。</td></tr>
+      <tr><td><code>reveal-targets</code></td><td>無</td><td>完結後要顯示的元素，見下方說明。</td></tr>
+      <tr><td><code>remove-targets</code></td><td>無</td><td>完結後要從頁面刪除的元素，見下方說明。</td></tr>
+    </table>
+
+    <h2 id="mail-attrs">inbox-mail 屬性</h2>
+    <table>
+      <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+      <tr><td><code>new</code></td><td>無</td><td>有寫就是新郵件，播放時才抵達；沒寫就是既有郵件。</td></tr>
+      <tr><td><code>from</code></td><td>寄件人</td><td>寄件人名稱，頭像取第一個字。</td></tr>
+      <tr><td><code>email</code></td><td>無</td><td>寄件人信箱，只在閱讀窗格顯示。</td></tr>
+      <tr><td><code>subject</code></td><td>（無主旨）</td><td>主旨。</td></tr>
+      <tr><td><code>time</code></td><td>新郵件「剛剛」</td><td>右側時間，任何文字都可以，例如「昨天」、「11月25日」、「上午 9:12」。</td></tr>
+      <tr><td><code>unread</code></td><td>無</td><td>既有郵件顯示成未讀（粗體、左側色條），並算進起始未讀數。新郵件一律未讀。</td></tr>
+      <tr><td><code>star</code></td><td>無</td><td>加上星號。</td></tr>
+      <tr><td><code>attach</code></td><td>無</td><td>顯示附件圖示；寫檔名（例如 <code>attach="exam.pdf"</code>）時，閱讀窗格會顯示那個檔名，只寫 <code>attach</code> 顯示「附件」。</td></tr>
+      <tr><td><code>color</code></td><td>依寄件人</td><td>頭像顏色；沒寫時依寄件人名稱自動挑色，同一個寄件人顏色固定。</td></tr>
+    </table>
+    <p>標籤之間的內容就是信件內文，可以寫任何 HTML（例如多個 <code>&lt;p&gt;</code>）。列表上顯示的是去掉標籤後的純文字摘要，閱讀窗格顯示完整內容。</p>
+
+    <h2 id="colors">配色</h2>
+    <table>
+      <tr><th>屬性</th><th>預設</th><th>說明</th></tr>
+      <tr><td><code>bg</code></td><td>base</td><td>頂列與左側欄的底色。</td></tr>
+      <tr><td><code>panel</code></td><td>bg-alternative</td><td>信件列表與閱讀窗格的底色。</td></tr>
+      <tr><td><code>accent</code></td><td>key</td><td>強調色：未讀色條、新信亮起、撰寫按鈕、通知卡外框、點擊波紋、提示文字。</td></tr>
+      <tr><td><code>text-color</code></td><td>shell</td><td>文字色。較亮的標題色、較暗的摘要色、分隔線、骨架列都由它和 <code>panel</code> 混色算出。</td></tr>
+      <tr><td><code>badge-color</code></td><td>red</td><td>未讀數徽章。</td></tr>
+      <tr><td><code>user-color</code></td><td>violet</td><td>右上角使用者頭像。</td></tr>
+    </table>
+    <p>可以寫色票名稱（例如 <code>key</code>、<code>bg-alternative</code>、<code>playful</code>），也可以寫 <code>#RRGGBB</code> 色碼。因為深淺是用混色算出來的，請不要寫 <code>rgb()</code> 或顏色英文名稱。</p>
+
+    <h2 id="targets">完結後顯示或刪除元素</h2>
+    <pre><code>&lt;inbox-arrival open-mail reveal-targets="rv-a,rv-b" remove-targets="rv-lock"&gt;
+  &lt;inbox-mail new from="課程助教" subject="下一課的教材已開放"&gt;可以開始準備了。&lt;/inbox-mail&gt;
+&lt;/inbox-arrival&gt;
+
+&lt;div id="rv-lock"&gt;尚未解鎖：收完信後才能看到教材。&lt;/div&gt;
+&lt;div id="rv-a" hidden&gt;教材 1：Part 2 口說題卡&lt;/div&gt;
+&lt;div id="rv-b" style="display:none"&gt;教材 2：本課語塊表下載&lt;/div&gt;</code></pre>
+    <ul>
+      <li>寫法：用逗號分隔；只寫 id 可以省略 <code>#</code>，也可以寫選擇器，例如 <code>.tip</code>、<code>#box p</code>。找不到的項目會在主控台提醒。</li>
+      <li>顯示：拿掉 <code>hidden</code>、<code>bp-hidden</code>、<code>d-none</code>，清掉 <code>display:none</code>，並往上浮現；CSS 本身設為 <code>display:none</code> 的元素會改成 <code>display:block</code>。</li>
+      <li>刪除：從頁面移除。</li>
+      <li>重播時，顯示過的再藏起來，刪除過的放回原來的位置。</li>
+      <li>規則和 treasure-chest、cycling-sprint 相同。</li>
+    </ul>
+
+    <h2 id="lw">搭配 link-when</h2>
+    <p><a href="https://github.com/studyadvice/open">studyadvice/open</a> 的 <code>&lt;link-when&gt;</code> 可以直接串接，不需要修改 link-when.js；兩個檔案誰先載入都可以。</p>
+    <pre><code>&lt;!-- 對話播完 → 收件匣出現並開始收信（do 預設 play） --&gt;
+&lt;link-when source="#lesson" target="#inbox" delay="388" enter="pop"&gt;&lt;/link-when&gt;
+
+&lt;!-- 收件匣完結（event="done"）→ 顯示下一步 --&gt;
+&lt;link-when source="#inbox" target="#next" do="show" delay="300" enter="slide-up"&gt;&lt;/link-when&gt;
+
+&lt;inbox-arrival id="inbox" hidden trigger="none" open-mail&gt; … &lt;/inbox-arrival&gt;
+
+&lt;script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/lw/link-when.js"&gt;&lt;/script&gt;
+&lt;script src="inbox-arrival.js"&gt;&lt;/script&gt;</code></pre>
+    <ul>
+      <li>收件匣當 target：<code>do="play"</code>（預設）開始播放，<code>do="reset"</code> 回到待機，<code>do="show"</code> 只顯示（搭配 <code>trigger="auto"</code>，顯示後會自動開始）。</li>
+      <li>收件匣當 source：<code>event="done"</code> 等到動畫完結才觸發下一步。</li>
+      <li>當 target 而且不希望學生先點，請寫 <code>trigger="none"</code>，再用 <code>hidden</code> 先藏起來。</li>
+    </ul>
+
+    <h2 id="license">授權</h2>
+    <p>MIT，見 repo 根目錄的 <a href="../LICENSE">LICENSE</a>。</p>
+  </main>
+</div>
+<script src="inbox-arrival.js"></script>
+</body>
+</html>

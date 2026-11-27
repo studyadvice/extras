@@ -19,6 +19,7 @@
      g：這個檔案會建立的全域物件（沒有註冊自訂元素時用來判斷是否成功執行） */
   var T = {
     'chest/cycling-sprint.js': {'r':'x','o':['cycling-sprint','sprint-result'],'d':['cycling-sprint','sprint-result'],'g':['CyclingSprint']},
+    'chest/inbox-arrival.js': {'r':'x','o':['inbox-arrival','inbox-mail'],'d':['inbox-arrival','inbox-mail'],'g':['InboxArrival']},
     'chest/treasure-chest.js': {'r':'x','o':['chest-prize','treasure-chest'],'d':['chest-prize','treasure-chest'],'g':['TreasureChest']},
     'chest/ui-opener.js': {'r':'x','o':['ui-opener'],'d':['ui-opener'],'g':['UiOpener']},
     'rw/rect-weave.js': {'r':'x','o':['rect-weave'],'d':['rect-weave'],'g':['RectWeave']},

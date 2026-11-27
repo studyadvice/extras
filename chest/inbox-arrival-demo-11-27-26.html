@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>inbox-arrival 範例</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css">
+<style>
+  :root {
+    --bg: #0C0D0C; --alt: #2D2D2D; --shell: #C6C7BD; --vanilla: #DBEDD8; --yellow: #E3D322; --blue: #5DBAE8;
+    --gray: #86877F; --line: #3B3C3A; --key: #51DBCF; --green: #71CD76; --violet: #B484E8;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--shell); }
+  body { font-family: "微軟正黑體", "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif; font-size: 1rem; margin: 0; min-width: 1280px; }
+  .page { max-width: 1680px; margin: 0 auto; padding: 32px 38px 80px 38px; }
+  h1 { color: var(--vanilla); font-size: 2rem; font-weight: 700; margin: 0 0 8px 0; }
+  .lead-note { color: var(--gray); margin: 0 0 28px 0; line-height: 1.7; }
+  .lead-note code, .demo code { color: var(--yellow); background: var(--bg); }
+  .lead-note a { color: var(--key); }
+  .demo pre.code code { color: var(--vanilla); background: #1A1B1A; }
+  .demo { border: 1px solid var(--line); border-radius: 10px; padding: 22px; margin: 0 0 28px 0; background: #121312; }
+  .demo h2 { font-size: 1.35rem; color: var(--blue); margin: 0 0 6px 0; }
+  .demo .desc { font-size: 0.95rem; margin: 0 0 16px 0; line-height: 1.7; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr); gap: 22px; align-items: start; }
+  .pair-label { font-size: 0.8rem; color: var(--gray); letter-spacing: 0.05em; margin: 0 0 8px 0; }
+  pre.code { margin: 0; padding: 16px; border-radius: 8px; background: #1A1B1A; color: var(--vanilla);
+             font-size: 0.82rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; max-height: 660px; overflow: auto; }
+  .stage { border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+  .stage .lock { border: 2px dashed var(--gray); color: var(--gray); border-radius: 12px; padding: 12px 20px; }
+  .stage .unlock { border: 2px solid var(--green); color: var(--vanilla); border-radius: 12px; padding: 12px 20px; }
+  .stage .unlock b { color: var(--green); }
+  .stage .msg { border: 2px solid var(--green); color: var(--green); border-radius: 12px; padding: 12px 20px; font-size: 1.1rem; font-weight: 700; }
+  .btns { display: flex; gap: 8px; margin: 0 0 12px 0; }
+  .btns button { background: var(--bg); border: 1px solid var(--key); color: var(--key); border-radius: 6px; padding: 5px 16px; font-size: 0.9rem; cursor: pointer; font-family: inherit; }
+  .btns button:hover { background: var(--key); color: var(--bg); }
+  .alert-zone { position: fixed; top: 16px; right: 16px; z-index: 2000; width: 330px; }
+  .alert-zone .alert { background: #1B1C1B; color: var(--vanilla); border: 1px solid var(--blue); font-size: 0.9rem; margin: 0 0 8px 0; }
+</style>
+</head>
+<body>
+<div class="alert-zone" id="alert-zone"></div>
+<div class="page">
+  <h1>inbox-arrival：收件匣收到新郵件</h1>
+  <p class="lead-note">收件匣先顯示既有郵件，鈴鐺搖晃、未讀數加一，新郵件從列表頂端滑入並亮起；可以加通知卡、讓游標移過去點開新郵件。完結後可以顯示或刪除指定元素，也能用 link-when 串接。每個範例的「畫面」與「程式碼」由同一段原始碼產生。單一 <code>inbox-arrival.js</code>，CSS 內建，不用 Shadow DOM。完整屬性見 <a href="inbox-arrival-guide.html">說明網頁</a>。</p>
+
+  <section class="demo" data-demo>
+    <h2>範例 1：既有郵件加一封新郵件</h2>
+    <p class="desc">沒有 <code>new</code> 的 <code>&lt;inbox-mail&gt;</code> 是既有郵件，依原始碼順序由上往下排；有 <code>unread</code> 的既有郵件算進起始未讀數。既有郵件不到 8 封時，下方自動用灰色骨架列補滿。點畫面開始；加上 <code>replay</code>，完結後下方出現「再收一次」。收完信後，點任何一封信都能打開閱讀。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival replay>
+  <inbox-mail from="王老師" subject="本週口說作業" time="昨天" unread star>
+    請在週五前完成 Part 1 錄音，每題 30 到 60 秒。
+  </inbox-mail>
+  <inbox-mail from="教務處" subject="期中考時間公告" time="11月25日" attach="exam.pdf">
+    考試地點在 B203，請提早 10 分鐘入場。
+  </inbox-mail>
+  <inbox-mail from="Amy" subject="Re: 讀書會" time="11月23日">
+    週六下午三點可以嗎？
+  </inbox-mail>
+  <inbox-mail new from="IELTS 成績中心" subject="你的成績已公布" email="results@example.com">
+    <p>恭喜！你的口說拿到 7.0，寫作 6.5。</p>
+    <p>登入學員頁面可以查看各項評分細節。</p>
+  </inbox-mail>
+</inbox-arrival>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>範例 2：自動播放，連續收到三封，加通知卡</h2>
+    <p class="desc"><code>trigger="auto"</code> 捲動到畫面中自動播放；三封 <code>new</code> 依原始碼順序抵達，間隔 <code>interval="1300"</code> 毫秒，最後抵達的排在最上面。<code>toast</code> 在右上角滑出通知卡。<code>unread="12"</code> 直接指定起始未讀數，模擬畫面外還有很多舊信。</p>
+    <div class="btns"><button type="button" data-replay="#auto-demo">重新播放</button></div>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival id="auto-demo" trigger="auto" delay="500" interval="1300" toast unread="12">
+  <inbox-mail from="圖書館" subject="借閱到期提醒" time="上午 9:12">《Cambridge IELTS 18》將於明天到期。</inbox-mail>
+  <inbox-mail from="王老師" subject="寫作批改回饋" time="昨天" unread>Task 2 的段落連接可以再自然一點。</inbox-mail>
+  <inbox-mail from="系辦公室" subject="選課系統開放" time="11月20日">下學期選課從 12 月 1 日開始。</inbox-mail>
+  <inbox-mail new from="Ben" subject="今晚口說練習" time="剛剛">七點線上見，我會帶 Part 2 題卡。</inbox-mail>
+  <inbox-mail new from="報名中心" subject="考試報名成功" time="剛剛" attach="ticket.pdf">你的考試日期是 12 月 20 日。</inbox-mail>
+  <inbox-mail new from="王老師" subject="明天上課教室異動" time="剛剛">改到 C305，時間不變。</inbox-mail>
+</inbox-arrival>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>範例 3：游標移過去點開新郵件</h2>
+    <p class="desc"><code>cursor</code> 讓游標從右下角移到新郵件上按一下，出現點擊波紋，再展開閱讀窗格。只想直接打開、不要游標，改寫 <code>open-mail</code>。寫了 <code>cursor</code> 就會打開信件，不必再加 <code>open-mail</code>。閱讀窗格右上角的「關閉」可以收起。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival cursor toast replay app-name="Campus Mail" user="Nelson">
+  <inbox-mail from="教務處" subject="期末報告繳交方式" time="昨天">請上傳 PDF 至課程平台。</inbox-mail>
+  <inbox-mail from="Amy" subject="筆記分享" time="11月22日" star attach="notes.docx">這是上週的課堂筆記。</inbox-mail>
+  <inbox-mail new from="Admissions Office" subject="Offer of Admission" email="admissions@example.edu" attach="offer-letter.pdf">
+    <p>Dear Nelson,</p>
+    <p>We are pleased to offer you a place on the MSc programme starting in September.</p>
+    <p>Please confirm your acceptance within 28 days.</p>
+  </inbox-mail>
+</inbox-arrival>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>範例 4：完結後顯示或刪除元素</h2>
+    <p class="desc">寫法和 treasure-chest 相同：逗號分隔，只寫 id 可以省略 <code>#</code>，也可以寫選擇器。執行時機是最後一封新信亮起結束時；有開閱讀窗格的話，是窗格展開之後。按「重來」會呼叫 <code>reset()</code>，顯示過的再藏起來，刪除過的放回原位。</p>
+    <div class="btns"><button type="button" data-reset="#reveal-demo">重來</button></div>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival id="reveal-demo" open-mail reveal-targets="rv-a,rv-b" remove-targets="rv-lock" hint="點擊查看今天的信">
+  <inbox-mail from="王老師" subject="上週作業成績" time="週一">平均 6.5，詳見附件。</inbox-mail>
+  <inbox-mail new from="課程助教" subject="下一課的教材已開放" time="剛剛">
+    <p>Part 2 口說題卡和本課語塊表已經上傳，可以開始準備了。</p>
+  </inbox-mail>
+</inbox-arrival>
+<div id="rv-lock" class="lock">尚未解鎖：收完信後才能看到教材。</div>
+<div id="rv-a" class="unlock" hidden><b>教材 1</b>　Part 2 口說題卡</div>
+<div id="rv-b" class="unlock" style="display:none"><b>教材 2</b>　本課語塊表下載</div>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>範例 5：換配色，只有新郵件，骨架列數量自訂</h2>
+    <p class="desc">顏色屬性可以寫色票名稱或色碼：<code>bg</code> 外框、<code>panel</code> 列表底色、<code>accent</code> 強調色、<code>text-color</code> 文字、<code>badge-color</code> 未讀徽章、<code>user-color</code> 右上角頭像。沒有既有郵件時，用 <code>filler="5"</code> 指定 5 列骨架；寫 <code>filler="0"</code> 就不補。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<inbox-arrival replay filler="5" panel="#1E2230" bg="#121520" accent="playful" text-color="vanilla" badge-color="urgent" user-color="key" app-name="Study Post" hint="點我收信">
+  <inbox-mail new from="Daily Vocab" subject="今日單字：resilient" color="energetic">
+    resilient（adj.）能迅速恢復的；有韌性的。
+  </inbox-mail>
+</inbox-arrival>
+    </script>
+  </section>
+
+  <section class="demo" data-demo>
+    <h2>範例 6：搭配 link-when，對話播完收信，收完信出現下一步</h2>
+    <p class="desc">按對話的「播放」。收件匣當 target 時 <code>do="play"</code>（預設）會開始播放；當 source 時 <code>event="done"</code> 等到動畫完結。<code>link-when.js</code> 與 <code>inbox-arrival.js</code> 誰先載入都可以。這個範例要連網載入 open repo 的 ui-stream 與 link-when，其他範例離線也能用。</p>
+    <div class="pair">
+      <div><p class="pair-label">畫面</p><div class="stage"></div></div>
+      <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
+    </div>
+    <script type="text/plain" class="demo-src">
+<ui-stream id="lw-s" controls height="200" avatar-size="36" bubble-width="86">
+  <stream-role name="student" label="Amy" color="violet" initials="A" side="left" data-style="outline"></stream-role>
+  <stream-role name="teacher" label="老師" color="key" initials="T" side="right" data-style="filled"></stream-role>
+  <stream-item from="student">Have you checked your email?</stream-item>
+  <stream-item from="teacher" typed>還沒，我來看看有沒有新信。</stream-item>
+</ui-stream>
+<inbox-arrival id="lw-i" hidden trigger="none" open-mail>
+  <inbox-mail from="學務處" subject="宿舍抽籤結果" time="昨天">恭喜抽中！</inbox-mail>
+  <inbox-mail new from="王老師" subject="模擬考成績" time="剛剛">整體 7.0，口說進步最多。</inbox-mail>
+</inbox-arrival>
+<div id="lw-msg" class="msg" hidden>下一步：預約一對一口說回饋</div>
+<link-when source="#lw-s" target="#lw-i" delay="388" enter="pop"></link-when>
+<link-when source="#lw-i" target="#lw-msg" do="show" delay="300" enter="slide-up"></link-when>
+    </script>
+  </section>
+</div>
+
+<script>
+/* 由同一段原始碼同時產生實例與程式碼，確保範例與程式碼一致 */
+(() => {
+  const dedent = s => {
+    const lines = s.replace(/^\n+|\s+$/g, '').split('\n');
+    const ind = Math.min(...lines.filter(l => l.trim()).map(l => l.match(/^\s*/)[0].length));
+    return lines.map(l => l.slice(ind)).join('\n');
+  };
+  document.querySelectorAll('[data-demo]').forEach(sec => {
+    const src = dedent(sec.querySelector('script.demo-src').textContent);
+    sec.querySelector('pre.code code').textContent = src;
+    sec.querySelector('.stage').insertAdjacentHTML('beforeend', src);
+  });
+})();
+
+/* 範例上方的按鈕 */
+document.addEventListener('click', e => {
+  const r = e.target.closest('[data-replay]'), z = e.target.closest('[data-reset]');
+  if (r) { const el = document.querySelector(r.dataset.replay); el.reset(); el.play(); }
+  if (z) document.querySelector(z.dataset.reset).reset();
+});
+
+/* 完結時用 Bootstrap alert 提示 */
+document.addEventListener('inbox-arrival:done', e => {
+  const zone = document.getElementById('alert-zone');
+  const box = document.createElement('div');
+  box.className = 'alert alert-dismissible fade show';
+  box.innerHTML = '<span></span><button type="button" class="btn-close btn-close-white"></button>';
+  const d = e.detail, id = e.target.id ? '#' + e.target.id : 'inbox-arrival';
+  box.firstChild.textContent = id + ' 收信完成' + (d.revealed.length ? '，已顯示 ' + d.revealed.length + ' 個元素' : '') + (d.removed.length ? '，已刪除 ' + d.removed.length + ' 個元素' : '');
+  box.querySelector('.btn-close').addEventListener('click', () => box.remove());
+  zone.appendChild(box);
+  setTimeout(() => box.remove(), 3500);
+});
+</script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/flow/ui-stream.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/lw/link-when.js"></script>
+<script src="inbox-arrival.js"></script>
+</body>
+</html>
