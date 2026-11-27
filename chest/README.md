@@ -112,7 +112,7 @@ chest.open();
 
 ## 搭配 link-when
 
-[studyadvice/ielts](https://github.com/studyadvice/ielts) 的 `<link-when>` 可以直接串接，不需要修改 link-when.js；兩個檔案誰先載入都可以。
+[studyadvice/open](https://github.com/studyadvice/open) 的 `<link-when>` 可以直接串接，不需要修改 link-when.js；兩個檔案誰先載入都可以。
 
 ```html
 <!-- 對話播完 → 寶箱彈出並開啟（do 預設 play） -->
@@ -121,14 +121,14 @@ chest.open();
 <!-- 寶箱開完（event="done" ＝ treasure-chest:opened）→ 顯示下一課 -->
 <link-when source="#chest" target="#next" do="show" delay="300" enter="slide-up"></link-when>
 
-<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/lw/link-when.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/lw/link-when.js"></script>
 <script src="treasure-chest.js"></script>
 ```
 
 - 寶箱當 target：`do="play"`（預設）開啟，`do="reset"` 關回原狀，`do="show"` 只顯示（搭配 `trigger="auto"` 顯示後會自動開啟）。
 - 寶箱當 source：`event="done"` 等到動畫完結；`event="treasure-chest:open"` 一開始就觸發。
 
-範例頁的範例 5 從 jsDelivr 載入 ielts v1.5 的 ui-stream 與 link-when，需要連網；其他範例離線也能用。
+範例頁的範例 5 從 jsDelivr 載入 open 的 ui-stream 與 link-when，需要連網；其他範例離線也能用。
 
 ## 版本紀錄
 

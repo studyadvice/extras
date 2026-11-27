@@ -450,7 +450,7 @@
 
   <section class="demo" data-demo>
     <h2>搭配 link-when：對話播完開寶箱，寶箱開完出現下一課</h2>
-    <p class="desc">按對話的「播放」。寶箱當 target 時 <code>do="play"</code>（預設）會開箱；當 source 時 <code>event="done"</code> 等到開箱動畫完成。<code>link-when.js</code> 與 <code>treasure-chest.js</code> 誰先載入都可以。這個範例要連網載入 ielts repo 的 ui-stream 與 link-when，其他範例離線也能用。</p>
+    <p class="desc">按對話的「播放」。寶箱當 target 時 <code>do="play"</code>（預設）會開箱；當 source 時 <code>event="done"</code> 等到開箱動畫完成。<code>link-when.js</code> 與 <code>treasure-chest.js</code> 誰先載入都可以。這個範例要連網載入 open repo 的 ui-stream 與 link-when，其他範例離線也能用。</p>
     <div class="pair">
       <div><p class="pair-label">畫面</p><div class="stage"></div></div>
       <div><p class="pair-label">程式碼</p><pre class="code"><code></code></pre></div>
@@ -589,8 +589,8 @@ document.addEventListener('treasure-chest:opened', e => {
 });
 document.addEventListener('treasure-chest:reset', e => queue('treasure-chest:reset', ' → ' + e.target.type));
 </script>
-<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/flow/ui-stream.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/studyadvice/ielts@v1.5/lw/link-when.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/flow/ui-stream.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/studyadvice/open@main/lw/link-when.js"></script>
 <script src="treasure-chest.js"></script>
 </body>
 </html>
