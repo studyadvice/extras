@@ -42,6 +42,7 @@
     'layout/ui-drill.js': {'r':'u','o':['drill-tile','rightup-item','ui-drill'],'d':['drill-tile','rightup-item','ui-drill'],'g':[]},
     'layout/ui-steps.js': {'r':'u','o':['step-item','ui-steps'],'d':['step-item','ui-steps'],'g':[]},
     'lens/lens-read.js': {'r':'u','o':['lens-read','lens-word'],'d':['lens-read','lens-word'],'g':['LensRead']},
+    'lesson/lesson-unit.js': {'r':'u','o':['lesson-nav','lesson-unit'],'d':['lesson-nav','lesson-unit'],'g':['LessonUnit']},
     'lw/link-when.js': {'r':'u','o':['link-when'],'d':['link-when'],'g':['LinkWhen']},
     'maze/maze-quiz.js': {'r':'u','o':['maze-quiz','maze-quiz-panel'],'d':['maze-quiz','maze-quiz-panel'],'g':[]},
     'mini/mini-table.js': {'r':'u','o':['mini-table','mt-badge'],'d':['mini-table'],'g':['MiniTable']},
@@ -101,7 +102,9 @@
     'note/bp-popnote.js': '[data-popover-target], [data-popover-content], [data-popover-title]',
     'post/ui-post-beyond.js': 'ui-post[avatar-glow], post-item[avatar-glow]',
     'flow/ui-stream-beyond.js': 'stream-item[avatar-glow], stream-item[reveal-pause], stream-item[data-style="spot"], stream-item[data-style="faint"], stream-role[data-style="spot"], stream-role[data-style="faint"], ui-stream[frame]',
-    'editor/md-editor-beyond.js': 'md-editor[send-url], md-editor[reply]'
+    'editor/md-editor-beyond.js': 'md-editor[send-url], md-editor[reply]',
+    'sthd/sticky-head.js': 'lesson-unit[sh-heading]',
+    'numeric-list.js': 'lesson-nav'
   };
   /* 屬性對應的說明文字 */
   var ATTR_NOTE = {
@@ -111,7 +114,9 @@
     'note/bp-popnote.js': 'data-popover-* 屬性',
     'post/ui-post-beyond.js': 'ui-post 或 post-item 的 avatar-glow',
     'flow/ui-stream-beyond.js': 'stream-item 的 avatar-glow、reveal-pause、data-style="spot/faint"，或 ui-stream 的 frame',
-    'editor/md-editor-beyond.js': 'md-editor 的 send-url 或 reply'
+    'editor/md-editor-beyond.js': 'md-editor 的 send-url 或 reply',
+    'sthd/sticky-head.js': '寫了 sh-heading 的 lesson-unit（會產生 sticky-head）',
+    'numeric-list.js': 'lesson-nav（會產生 ui-list）'
   };
   /* 依賴：載入左邊的檔案時，右邊每一組至少要載入一個 */
   var NEEDS = {
