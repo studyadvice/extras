@@ -1,5 +1,42 @@
 (() => {
   'use strict';
+  /* ── 顯示與隱藏（UIWorld 元件共用同一段，各檔內容相同，修改時請一起改）──
+     頁面上的區塊可用四種寫法隱藏：class="bp-hidden"、class="d-none"、hidden 屬性、style="display: none;"。
+     uivShow：四種全部清掉；仍被其他樣式隱藏時，才補 display:block。
+     uivHide：加上 bp-hidden；仍看得見時（例如 Bootstrap 的 d-flex、行內 display:flex，或頁面沒載入 bp-styles.css），才補行內 display:none !important。
+     uivHidden：目前是否隱藏。uivSave、uivRestore：記下與還原顯示狀態，重播或退回時使用。 */
+  function uivShow(el) {
+    if (!el || !el.style) return;
+    if (el.classList) { el.classList.remove('bp-hidden'); el.classList.remove('d-none'); }
+    if (el.hasAttribute && el.hasAttribute('hidden')) el.removeAttribute('hidden');
+    if (el.style.display === 'none') el.style.removeProperty('display');
+    if (el.isConnected && getComputedStyle(el).display === 'none') el.style.display = 'block';
+  }
+  function uivHide(el) {
+    if (!el || !el.style) return;
+    if (el.classList) el.classList.add('bp-hidden');
+    if (!el.isConnected || getComputedStyle(el).display !== 'none') el.style.setProperty('display', 'none', 'important');
+  }
+  function uivHidden(el) {
+    if (!el || !el.style) return true;
+    if (el.isConnected) return getComputedStyle(el).display === 'none';
+    return el.hidden || el.style.display === 'none' ||
+      !!(el.classList && (el.classList.contains('bp-hidden') || el.classList.contains('d-none')));
+  }
+  function uivSave(el) {
+    return {
+      hidden: el.hasAttribute('hidden'), display: el.style.display,
+      bp: el.classList.contains('bp-hidden'), dn: el.classList.contains('d-none')
+    };
+  }
+  function uivRestore(el, s) {
+    if (!el || !s) return;
+    if (s.hidden) el.setAttribute('hidden', ''); else el.removeAttribute('hidden');
+    el.style.display = s.display;
+    el.classList.toggle('bp-hidden', s.bp);
+    el.classList.toggle('d-none', s.dn);
+  }
+
   if (customElements.get('treasure-chest')) return;
 
   const PALETTE = { base:'#0C0D0C', shell:'#C6C7BD', vanilla:'#DBEDD8', yellow:'#E3D322', pink:'#FF91D7', red:'#EF6661', green:'#71CD76', blue:'#5DBAE8', indigo:'#778CE1', violet:'#B484E8', gray:'#86877F', key:'#51DBCF', calm:'#A3C4BC', quiet:'#8EA4DE', playful:'#FFA987', urgent:'#FF2E63', energetic:'#B6FF00', dreamy:'#C394CD', salmon:'#FFC88A', 'bg-alternative':'#2D2D2D' };
@@ -1172,10 +1209,8 @@ ${tassel}
     _runTargets() {
       const o = this._o, shown = [], removed = [];
       this._targets(o.reveal).forEach(el => {
-        shown.push({ el, hidden: el.hidden, display: el.style.display });
-        el.hidden = false;
-        if (el.style.display === 'none') el.style.display = '';
-        if (getComputedStyle(el).display === 'none') el.style.display = 'block';
+        shown.push({ el, vis: uivSave(el) });
+        uivShow(el);
         if (el.animate) el.animate([{ transform: 'translateY(14px) scale(.97)' }, { transform: 'none' }], { duration: 450, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
       });
       this._targets(o.remove).forEach(el => { if (!el.parentNode) return; removed.push({ el, parent: el.parentNode, next: el.nextSibling }); el.remove(); });
@@ -1185,7 +1220,7 @@ ${tassel}
     /* reset() 時還原：顯示過的再藏起來，刪除過的放回原位 */
     _undoTargets() {
       const d = this._done || { shown: [], removed: [] };
-      d.shown.forEach(x => { x.el.hidden = x.hidden; x.el.style.display = x.display; });
+      d.shown.forEach(x => { uivRestore(x.el, x.vis); });
       d.removed.slice().reverse().forEach(x => { x.parent.insertBefore(x.el, x.next && x.next.parentNode === x.parent ? x.next : null); });
       this._done = { shown: [], removed: [] };
     }
