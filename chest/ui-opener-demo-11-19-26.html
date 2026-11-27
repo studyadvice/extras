@@ -101,7 +101,7 @@
     <tr><td>shape</td><td>bg-alternative</td><td>建築與橋墩的剪影色。</td></tr>
     <tr><td>text-color、subtitle-color</td><td>vanilla、shell</td><td>主標題與副標題的文字色。</td></tr>
   </table>
-  <p class="note">顏色可寫色票名稱或色碼。方法 <code>play()</code>、<code>pause()</code>、<code>toggle()</code>、<code>restart()</code>，事件 <code>opener-start</code>、<code>opener-end</code>，唯讀屬性 <code>duration</code>。場景總長約 5.3 秒（速度 1 倍，依車廂數略有不同），最後停在標題畫面，車流持續循環。</p>
+  <p class="note">顏色可寫色票名稱或色碼。方法 <code>play()</code>、<code>pause()</code>、<code>toggle()</code>、<code>restart()</code>，事件 <code>opener-start</code>、<code>opener-end</code>，唯讀屬性 <code>duration</code>。搭配 link-when 時，<code>event="done"</code> 對應 <code>opener-end</code>，<code>do="restart"</code> 從頭播放；要等 link-when 觸發才播，請寫 <code>autoplay="false"</code>。場景總長約 5.3 秒（速度 1 倍，依車廂數略有不同），最後停在標題畫面，車流持續循環。</p>
 
   <h2 class="ver">v0.1.0　11-19-26　粗製版（已被取代）</h2>
   <p class="note">v0.1.0 有火山、夜間城市、深夜書桌三個場景，並有 <code>scene</code> 屬性。v0.2.0 依需求只保留夜間城市，<code>scene</code> 屬性已移除，舊場景的程式碼不再提供；夜間城市的舊版（直線橋、無車流）由上方的新版取代。</p>

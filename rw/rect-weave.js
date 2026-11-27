@@ -410,4 +410,8 @@ rect-weave svg{display:block;overflow:visible;}
 
   customElements.define('rect-weave', RectWeave);
   window.RectWeave = RectWeave;
+
+  /* 支援 <link-when event="done">：把完成事件登記到 link-when 的對照表。link-when.js 先載入或後載入都可以 */
+  const reg = () => { const L = window.LinkWhen; if (L && L.doneEvents && !L.doneEvents['rect-weave']) L.doneEvents['rect-weave'] = 'rect-weave:end'; };
+  reg(); customElements.whenDefined('link-when').then(reg);
 })();

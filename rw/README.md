@@ -84,6 +84,8 @@
 | --- | --- | --- |
 | `rect-weave:end` | `{ seed }` | 畫線動畫結束。 |
 
+搭配 [studyadvice/open](https://github.com/studyadvice/open) 的 `<link-when>`：`event="done"` 對應 `rect-weave:end`，`do="replay"` 重播畫線動畫。兩個檔案誰先載入都可以。
+
 ## 規則
 
 違反下列任何一條，整張圖不顯示，並在主控台印出紅字錯誤。看到一片空白就表示寫錯了。

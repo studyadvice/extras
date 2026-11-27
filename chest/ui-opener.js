@@ -472,4 +472,8 @@
 
   customElements.define('ui-opener', UiOpener);
   window.UiOpener = { colors: COLORS };
+
+  /* 支援 <link-when event="done">：把完成事件登記到 link-when 的對照表。link-when.js 先載入或後載入都可以 */
+  var reg = function () { var L = window.LinkWhen; if (L && L.doneEvents && !L.doneEvents['ui-opener']) L.doneEvents['ui-opener'] = 'opener-end'; };
+  reg(); customElements.whenDefined('link-when').then(reg);
 })();
