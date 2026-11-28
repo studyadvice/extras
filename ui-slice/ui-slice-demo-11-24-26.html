@@ -18,12 +18,268 @@
   .play label{color:#DBEDD8;font-size:0.9rem;}
   .play .form-control,.play .form-select{background:#0C0D0C;color:#DBEDD8;border-color:#778CE1;}
   code{color:#FFA987;}
+  h3.recipe-title{color:#B484E8;font-size:1.1rem;margin:0 0 10px 0;}
 </style>
 </head>
 <body>
 <div class="container-fluid py-5" style="padding-left:56px;padding-right:56px;">
   <h1 class="mb-3">&lt;ui-slice&gt; 斜線分割拼貼</h1>
   <p class="lead-note mb-5">長、寬各分成 10 等分，用 <code>&lt;ui-cut&gt;</code> 定義分割線，<code>&lt;img&gt;</code> 依區域編號放入圖片。區域編號規則：重心由上往下，同高再由左往右。</p>
+
+
+  <!-- 新增：常用版型與外觀 -->
+  <section class="demo-block">
+    <h2>常用版型與外觀</h2>
+    <p class="lead-note">README 新增的範例都在這裡，圖片用 rect-weave 資料夾的示範圖。區域編號以 <code>debug</code> 確認過。</p>
+    <div class="row g-5">
+      <div class="col-xl-6">
+        <h3 class="recipe-title">兩張：斜切左右</h3>
+        <ui-slice ratio="16/9">
+  <ui-cut from="top:6" to="bottom:3"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 左、2 右。最常用的雙圖對比，例如「之前／之後」。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">兩張：斜切上下</h3>
+        <ui-slice ratio="16/9">
+  <ui-cut from="left:3" to="right:7"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 上、2 下。適合橫向的風景圖上下排。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot;&gt;
+  &lt;ui-cut from=&quot;left:3&quot; to=&quot;right:7&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">三張：斜直條</h3>
+        <ui-slice ratio="16/9">
+  <ui-cut from="top:3" to="bottom:2"></ui-cut>
+  <ui-cut from="top:7" to="bottom:6"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-dawn.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 左、2 中、3 右。兩條線都接在上下兩邊，第二條線的兩端都落在右側區域，所以合法。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot;&gt;
+  &lt;ui-cut from=&quot;top:3&quot; to=&quot;bottom:2&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;top:7&quot; to=&quot;bottom:6&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">三張：一大兩小</h3>
+        <ui-slice ratio="16/9">
+  <ui-cut from="top:6" to="bottom:5"></ui-cut>
+  <ui-cut from="cut1:5" to="right:5"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-dawn.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 右上、2 左邊大區、3 右下。第二條線從 cut1 的中點接到右邊。主圖要放左邊大區時，寫 <code>region=&quot;2&quot;</code>。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:5&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;cut1:5&quot; to=&quot;right:5&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">四張：斜十字</h3>
+        <ui-slice ratio="16/9">
+  <ui-cut from="top:6" to="bottom:5"></ui-cut>
+  <ui-cut from="left:3" to="cut1:5"></ui-cut>
+  <ui-cut from="cut1:5" to="right:6"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-dawn.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 左上、2 右上、3 左下、4 右下。不能畫一條穿過 cut1 的橫線，所以拆成兩段：cut2 從左邊接到 cut1，cut3 再從 cut1 的同一點接到右邊。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:5&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;left:3&quot; to=&quot;cut1:5&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;cut1:5&quot; to=&quot;right:6&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot;&gt;
+  &lt;img src=&quot;d.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">五張：三欄再切兩刀</h3>
+        <ui-slice ratio="16/9">
+  <ui-cut from="top:3" to="bottom:2"></ui-cut>
+  <ui-cut from="top:7" to="bottom:6"></ui-cut>
+  <ui-cut from="left:6" to="cut1:6"></ui-cut>
+  <ui-cut from="cut2:3" to="right:2"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-dawn.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-sunset.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 右上小區、2 左上、3 中間、4 右下、5 左下。區域大小差很多時，編號不一定照直覺排，先開 <code>debug</code> 看清楚再放圖。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot;&gt;
+  &lt;ui-cut from=&quot;top:3&quot; to=&quot;bottom:2&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;top:7&quot; to=&quot;bottom:6&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;left:6&quot; to=&quot;cut1:6&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;cut2:3&quot; to=&quot;right:2&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot;&gt;
+  &lt;img src=&quot;d.jpg&quot;&gt;
+  &lt;img src=&quot;e.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">正方形：三條斜帶</h3>
+        <ui-slice ratio="1:1">
+  <ui-cut from="top:8" to="left:8"></ui-cut>
+  <ui-cut from="bottom:3" to="right:3"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-dawn.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 左上、2 中間斜帶、3 右下。兩條平行的對角線，切出三條斜帶。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;1:1&quot;&gt;
+  &lt;ui-cut from=&quot;top:8&quot; to=&quot;left:8&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;bottom:3&quot; to=&quot;right:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">橫幅：手繪四欄</h3>
+        <ui-slice ratio="21/9" line="sketch" sketch-level="strong" seed="12">
+  <ui-cut from="top:2" to="bottom:3"></ui-cut>
+  <ui-cut from="top:5" to="bottom:6"></ui-cut>
+  <ui-cut from="top:8" to="bottom:7"></ui-cut>
+  <img src="../rw/demo-sunset.jpg" region="3">
+  <img src="../rw/demo-city.jpg" region="2">
+  <img src="../rw/demo-dawn.jpg" region="1">
+  <img src="../rw/demo-city.jpg" region="4">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">直線幾何下四欄的重心高度略有不同，編號由左到右是 3、2、1、4。想讓圖片由左到右照順序排，就用 <code>region</code> 指定，如範例所示。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;21/9&quot; line=&quot;sketch&quot; sketch-level=&quot;strong&quot; seed=&quot;12&quot;&gt;
+  &lt;ui-cut from=&quot;top:2&quot; to=&quot;bottom:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;top:5&quot; to=&quot;bottom:6&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;top:8&quot; to=&quot;bottom:7&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot; region=&quot;3&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot; region=&quot;2&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot; region=&quot;1&quot;&gt;
+  &lt;img src=&quot;d.jpg&quot; region=&quot;4&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">更細的等分：divisions</h3>
+        <ui-slice ratio="16/9" divisions="12">
+  <ui-cut from="top:5" to="right:11"></ui-cut>
+  <ui-cut from="bottom:7" to="cut1:7"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+  <img src="../rw/demo-dawn.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">區域 1 右上、2 左、3 右下。<code>divisions=&quot;12&quot;</code> 時等分點是 1 到 11，可以切得更細；<code>cutN:k</code> 的 k 也跟著是 1 到 11。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot; divisions=&quot;12&quot;&gt;
+  &lt;ui-cut from=&quot;top:5&quot; to=&quot;right:11&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;bottom:7&quot; to=&quot;cut1:7&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+  &lt;img src=&quot;c.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">純拼接：沒有間隙也沒有線</h3>
+        <ui-slice ratio="16/9" gap="0" stroke-width="0">
+  <ui-cut from="top:6" to="bottom:3"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;"></p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot; gap=&quot;0&quot; stroke-width=&quot;0&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">只畫線，不留間隙</h3>
+        <ui-slice ratio="16/9" gap="0" stroke="#E3D322" stroke-width="3">
+  <ui-cut from="top:6" to="bottom:3"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;"></p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot; gap=&quot;0&quot; stroke=&quot;#E3D322&quot; stroke-width=&quot;3&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">看起來像鏤空</h3>
+        <ui-slice ratio="16/9" gap="16" frame="16" stroke-width="0" gap-color="#0C0D0C">
+  <ui-cut from="top:6" to="bottom:3"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">把 <code>gap-color</code> 設成和頁面背景同色，再加上同寬的 <code>frame</code>，圖片就像一塊塊浮在頁面上。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot; gap=&quot;16&quot; frame=&quot;16&quot; stroke-width=&quot;0&quot; gap-color=&quot;#0C0D0C&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">速寫風：狂野手繪線加外框</h3>
+        <ui-slice ratio="16/9" line="sketch" sketch-level="wild" seed="21"
+          gap="10" frame="10" gap-color="#2D2D2D" stroke="#FF91D7" stroke-width="2.5">
+  <ui-cut from="top:6" to="bottom:3"></ui-cut>
+  <img src="../rw/demo-sunset.jpg">
+  <img src="../rw/demo-city.jpg">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;"><code>seed</code> 換一個數字就換一種筆觸；同一個 <code>seed</code> 每次畫出來都一樣，適合錄影重來。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot; line=&quot;sketch&quot; sketch-level=&quot;wild&quot; seed=&quot;21&quot;
+          gap=&quot;10&quot; frame=&quot;10&quot; gap-color=&quot;#2D2D2D&quot; stroke=&quot;#FF91D7&quot; stroke-width=&quot;2.5&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:3&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;a.jpg&quot;&gt;
+  &lt;img src=&quot;b.jpg&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+      <div class="col-xl-6">
+        <h3 class="recipe-title">控制圖片位置</h3>
+        <ui-slice ratio="16/9" gap="8" stroke-width="0">
+  <ui-cut from="top:6" to="bottom:5"></ui-cut>
+  <ui-cut from="cut1:5" to="right:5"></ui-cut>
+  <img src="../rw/demo-city.jpg" region="2" focus="50% 20%">
+  <img src="../rw/demo-sunset.jpg" focus="right center">
+  <img src="../rw/demo-dawn.jpg" zoom="1.6" focus="70% 30%">
+</ui-slice>
+        <p class="lead-note" style="margin:12px 0 10px 0;">第一張用 <code>region=&quot;2&quot;</code> 放進左邊大區，<code>focus</code> 決定保留的部分，<code>zoom</code> 放大後再裁切。</p>
+<pre class="code">&lt;ui-slice ratio=&quot;16/9&quot; gap=&quot;8&quot; stroke-width=&quot;0&quot;&gt;
+  &lt;ui-cut from=&quot;top:6&quot; to=&quot;bottom:5&quot;&gt;&lt;/ui-cut&gt;
+  &lt;ui-cut from=&quot;cut1:5&quot; to=&quot;right:5&quot;&gt;&lt;/ui-cut&gt;
+  &lt;img src=&quot;city.jpg&quot; region=&quot;2&quot; focus=&quot;50% 20%&quot;&gt;
+  &lt;img src=&quot;sunset.jpg&quot; focus=&quot;right center&quot;&gt;
+  &lt;img src=&quot;dawn.jpg&quot; zoom=&quot;1.6&quot; focus=&quot;70% 30%&quot;&gt;
+&lt;/ui-slice&gt;</pre>
+      </div>
+    </div>
+  </section>
 
   <!-- 新增：sketch-level -->
   <section class="demo-block">
